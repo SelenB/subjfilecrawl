@@ -9,7 +9,6 @@ import shutil
 class crawl_subject_GUI:
     def __init__(self, master):
         self.init_gui(master)
-        
     
     def init_gui(self, master):  
         self.master = master
