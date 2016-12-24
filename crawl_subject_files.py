@@ -5,6 +5,7 @@ import csv
 import os
 import re
 import shutil
+from pip._vendor.distlib.util import CSVWriter
 
 class crawl_subject_GUI:
     def __init__(self, master):
@@ -57,7 +58,7 @@ class crawl_subject_GUI:
         self.video_basic_option = tk.Checkbutton(master, variable = self.video_basic, text="Basic video files")
         self.video_basic_option.pack(anchor='w')
         # start process
-        self.start_button = tk.Button(master, text="start", command = lambda: self.crawl_files(self.path))
+        self.start_button = tk.Button(master, text="start", command = lambda: self.crawl_files(self.path, True))
         self.start_button.config(state="disable")
         self.start_button.pack(side=tk.BOTTOM, pady=(10,0))
         # next button
@@ -97,12 +98,10 @@ class crawl_subject_GUI:
     
     def getSavePath(self):
         self.save_filename = self.filename.get()
-        print self.save_filename
         
     def choose_output_directory(self):
         # save the output directory
         self.output_dir =  tkFileDialog.askdirectory(**self.dir_opt)
-        print self.output_dir
         # update the GUI to reflect the change
         self.current_output_dir["text"] = self.output_dir
         
@@ -173,7 +172,7 @@ class crawl_subject_GUI:
         label.pack(anchor="w", padx=(10,10), pady=(10,10))
         self.video_basic_type = True
 
-    def crawl_files(self, dirname):
+    def crawl_files(self, dirname, writeHeader=False):
         if self.copy_or_csv.get() == "copy":
             for sub in os.listdir(dirname):
                 path = os.path.join(dirname, sub)
@@ -181,22 +180,30 @@ class crawl_subject_GUI:
                     subs = self.crawl_files(path)
                 else:
                     if self.video_datavyu_type.get() == "final":
-                        if str(path).endswith('.jpg'):
+                        if str(path).endswith(".jpg"):
                             shutil.copy(path, self.output_dir)
         else:
+            x = self.save_filename
             if not re.match("(.csv)$", self.save_filename):
-                x = self.save_filename
-                self.save_filename = x+".csv"
-            writer = csv.writer(open(self.output_dir+'/'+self.save_filename, 'w'))
+                x +=".csv"
+            with open(self.output_dir+'/'+x, 'a') as f:
+                writer = csv.writer(f)
+                if writeHeader:
+                    writer.writerow(["full path", "file name"])
+            tups = []
             for sub in os.listdir(dirname):
                 path = os.path.join(dirname, sub)
                 if os.path.isdir(path):
                     subs = self.crawl_files(path)
                 else:
                     if self.audio_clan_type.get() == "final":
-                        if re.match("(.png)$", str(path)):
-                            writer.writerow(path)
-
+                        if str(path).endswith(".png"):
+                            tups.append([str(path), str(sub)])
+            with open(self.output_dir+'/'+x, 'a') as f:
+                writer = csv.writer(f)
+                for tup in tups:
+                    writer.writerow(tup)
+            
 if __name__=="__main__":
     root = tk.Tk()
     my_gui = crawl_subject_GUI(root)
