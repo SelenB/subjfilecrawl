@@ -10,7 +10,8 @@ from pip._vendor.distlib.util import CSVWriter
 class crawl_subject_GUI:
     def __init__(self, master):
         self.start = 0
-        self.path = "/home/nicky/classes"
+        # list of tupes that holds the path -> file structure
+        self.tups = []
         self.init_gui(master)
     
     def init_gui(self, master):  
@@ -19,6 +20,18 @@ class crawl_subject_GUI:
         # close button
         self.close_button = tk.Button(master, text="close", command = master.quit)
         self.close_button.pack(side=tk.BOTTOM)
+        # label for crawl directory
+        self.crawl_dir = os.getcwd()
+        crawlDirLabel = tk.Label(master, text="Crawl directory:")
+        crawlDirLabel.pack(anchor="w")
+        self.current_crawl_dir = tk.Label(master, bg="white", text = self.crawl_dir)
+        self.current_crawl_dir.pack(anchor="w", padx=5)  
+        #browser to choose crawl directory
+        self.choose_crawl_directory_button = tk.Button(master, text="Browse", command=lambda: self.choose_directory("crawl"))
+        self.choose_crawl_directory_button.pack(anchor="center", pady=(0,10))
+        self.crawl_dir_opt = options = {}
+        options["initialdir"] = os.getcwd()
+        options["mustexist"] = True
         # label for output directory
         self.output_dir = os.getcwd()
         outputDirLabel = tk.Label(master, text="Output directory:")
@@ -26,11 +39,9 @@ class crawl_subject_GUI:
         self.current_output_dir = tk.Label(master, bg="white", text=self.output_dir)
         self.current_output_dir.pack(anchor="w", padx=5)
         # browser to choose output directory
-        self.choose_directory_button = tk.Button(master, text="Browse", command=self.choose_output_directory)
-        self.choose_directory_button.pack(anchor='center', pady=(0,10))
-        self.dir_opt = options = {}
-        options['initialdir'] = os.getcwd()
-        options['mustexist'] = True
+        self.choose_output_directory_button = tk.Button(master, text="Browse", command=lambda: self.choose_directory("output"))
+        self.choose_output_directory_button.pack(anchor='center', pady=(0,10))
+        self.output_dir_opt = options
         # choose to save as csv or copy files to directory
         self.copy_or_csv = tk.StringVar()
         self.saveLabel = tk.Label(master, text="What do you want to do with these files?")
@@ -58,7 +69,7 @@ class crawl_subject_GUI:
         self.video_basic_option = tk.Checkbutton(master, variable = self.video_basic, text="Basic video files")
         self.video_basic_option.pack(anchor='w')
         # start process
-        self.start_button = tk.Button(master, text="start", command = lambda: self.crawl_files(self.path, True))
+        self.start_button = tk.Button(master, text="start", command = lambda: self.crawl_files_temp(self.crawl_dir))
         self.start_button.config(state="disable")
         self.start_button.pack(side=tk.BOTTOM, pady=(10,0))
         # next button
@@ -67,20 +78,20 @@ class crawl_subject_GUI:
         
     def getCheckboxVals(self):
         self.start = 1
-        checked = []
+        self.checked_boxes = []
         if (self.audio_clan.get()):
-            checked.append("audio_clan")
+            self.checked_boxes.append("audio_clan")
         if (self.audio_basic.get()):
-            checked.append("audio_basic")
+            self.checked_boxes.append("audio_basic")
         if (self.video_datavyu.get()):
-            checked.append("video_datavyu")
+            self.checked_boxes.append("video_datavyu")
         if (self.video_basic.get()):
-            checked.append("video_basic")
-        self.file_types = checked
-        if len(checked) == 0:
+            self.checked_boxes.append("video_basic")
+        self.file_types = self.checked_boxes
+        if len(self.checked_boxes) == 0:
             tkMessageBox.showinfo("Error", "You must select at least one type of file")
         else:
-            for item in checked:
+            for item in self.checked_boxes:
                 self.create_new_window(item)
             self.start_button.config(state="normal")
             self.getSavePath()
@@ -99,16 +110,24 @@ class crawl_subject_GUI:
     def getSavePath(self):
         self.save_filename = self.filename.get()
         
-    def choose_output_directory(self):
-        # save the output directory
-        self.output_dir =  tkFileDialog.askdirectory(**self.dir_opt)
-        # update the GUI to reflect the change
-        self.current_output_dir["text"] = self.output_dir
+    def choose_directory(self, dir_type):
+        if dir_type=="output":
+            # save the output directory
+            self.output_dir =  tkFileDialog.askdirectory(**self.output_dir_opt)
+            # update the GUI to reflect the change
+            self.current_output_dir["text"] = self.output_dir
+        else:
+            # save the crawl directory
+            self.crawl_dir = tkFileDialog.askdirectory(**self.crawl_dir_opt)
+            # update the GUI to reflect the change
+            self.current_crawl_dir["text"] = self.crawl_dir
         
     def create_new_window(self, option):
         self.audio_clan_type = tk.StringVar() 
+        self.audio_clan_type.set("None")
         self.audio_basic_type = False
         self.video_datavyu_type = tk.StringVar()
+        self.video_datavyu_type.set("None")
         self.video_basic_type = False
         if option == "audio_clan":
             self.audio_clan_window()
@@ -171,38 +190,62 @@ class crawl_subject_GUI:
         label.config(font="bold")
         label.pack(anchor="w", padx=(10,10), pady=(10,10))
         self.video_basic_type = True
-
-    def crawl_files(self, dirname, writeHeader=False):
-        if self.copy_or_csv.get() == "copy":
+    
+    def crawl_files_temp(self, dirname):
+        # if the save file name is empty and you want a csv
+        if not self.filename.get() and self.copy_or_csv.get()=="csv":
+            tkMessageBox.showinfo("Error", "You must provide a name for your file!")
+            return
+        # for each item in this directory
+        try:
             for sub in os.listdir(dirname):
                 path = os.path.join(dirname, sub)
+                # if the current item is a directory, recurse
                 if os.path.isdir(path):
-                    subs = self.crawl_files(path)
+                    self.crawl_files_temp(path)
+                # else, here's a file to check
                 else:
-                    if self.video_datavyu_type.get() == "final":
-                        if str(path).endswith(".jpg"):
-                            shutil.copy(path, self.output_dir)
-        else:
-            x = self.save_filename
-            if not re.match("(.csv)$", self.save_filename):
-                x +=".csv"
-            with open(self.output_dir+'/'+x, 'a') as f:
-                writer = csv.writer(f)
-                if writeHeader:
-                    writer.writerow(["full path", "file name"])
-            tups = []
-            for sub in os.listdir(dirname):
-                path = os.path.join(dirname, sub)
-                if os.path.isdir(path):
-                    subs = self.crawl_files(path)
-                else:
-                    if self.audio_clan_type.get() == "final":
-                        if str(path).endswith(".png"):
-                            tups.append([str(path), str(sub)])
-            with open(self.output_dir+'/'+x, 'a') as f:
-                writer = csv.writer(f)
-                for tup in tups:
-                    writer.writerow(tup)
+                    # add file paths to tups if it fits criteria
+                    if "audio_basic" in self.checked_boxes:
+                        if str(sub).endswith(".jpg"):
+                            self.tups.append((str(path), str(sub)))
+                    if "video_basic" in self.checked_boxes:
+                        pass
+                    if "audio_clan" in self.checked_boxes:
+                        pass
+                    if "video_datavyu" in self.checked_boxes:
+                        pass
+        # this only happens if we don't have permissions to files
+        except OSError as e:
+            print e
+        # once all of the items in the top level directory have been searched, we're done
+        if dirname==self.crawl_dir:
+            if self.copy_or_csv.get()=="copy":
+                self.copy_files(self.tups)
+            else:
+                self.copy_to_csv(self.tups)
+    
+    def copy_to_csv(self, lst):
+        x = self.save_filename
+        if not re.match("(.csv)$", self.save_filename):
+            x+=".csv"
+        with open(self.output_dir+'/'+x, 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow(["full path", "file name"])
+            for item in lst:
+                writer.writerow(item)
+                
+    def copy_files(self, lst):
+        for tup in lst:
+            filepath = tup[0]
+            localdir = os.path.dirname(filepath)
+            savepath = self.output_dir+localdir
+            try:
+                with open(savepath) as f: pass
+            except IOError as e:
+                if not os.path.exists(savepath):
+                    os.makedirs(savepath)
+                shutil.copy(filepath, savepath)
             
 if __name__=="__main__":
     root = tk.Tk()
