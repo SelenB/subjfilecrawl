@@ -10,7 +10,7 @@ from pip._vendor.distlib.util import CSVWriter
 class crawl_subject_GUI:
     def __init__(self, master):
         self.start = 0
-        # list of tupes that holds the path -> file structure
+        # list of tups that holds the path -> file structure
         self.tups = []
         self.init_gui(master)
     
@@ -68,6 +68,15 @@ class crawl_subject_GUI:
         self.video_basic = tk.IntVar()
         self.video_basic_option = tk.Checkbutton(master, variable = self.video_basic, text="Basic video files")
         self.video_basic_option.pack(anchor='w')
+        # month ranges
+        startMonthLabel = tk.Label(master, text="Start Month:")
+        startMonthLabel.pack(anchor="w")
+        self.start_month = tk.Spinbox(master, from_=0, to=10)
+        self.start_month.pack(anchor='w')
+        endMonthLabel = tk.Label(master, text="End Month:")
+        endMonthLabel.pack(anchor="w")
+        self.end_month = tk.Spinbox(master, from_=1, to=10)
+        self.end_month.pack(anchor="w")
         # start process
         self.start_button = tk.Button(master, text="start", command = lambda: self.crawl_files(self.crawl_dir))
         self.start_button.config(state="disable")
@@ -78,6 +87,8 @@ class crawl_subject_GUI:
         
     def getCheckboxVals(self):
         self.start = 1
+        if self.start_month.get() > self.end_month.get():
+            tkMessageBox.showinfo("Error", "The start date must be before the end date!")
         self.checked_boxes = []
         if (self.audio_clan.get()):
             self.checked_boxes.append("audio_clan")
