@@ -69,7 +69,7 @@ class crawl_subject_GUI:
         self.video_basic_option = tk.Checkbutton(master, variable = self.video_basic, text="Basic video files")
         self.video_basic_option.pack(anchor='w')
         # start process
-        self.start_button = tk.Button(master, text="start", command = lambda: self.crawl_files_temp(self.crawl_dir))
+        self.start_button = tk.Button(master, text="start", command = lambda: self.crawl_files(self.crawl_dir))
         self.start_button.config(state="disable")
         self.start_button.pack(side=tk.BOTTOM, pady=(10,0))
         # next button
@@ -191,7 +191,7 @@ class crawl_subject_GUI:
         label.pack(anchor="w", padx=(10,10), pady=(10,10))
         self.video_basic_type = True
     
-    def crawl_files_temp(self, dirname):
+    def crawl_files(self, dirname):
         # if the save file name is empty and you want a csv
         if not self.filename.get() and self.copy_or_csv.get()=="csv":
             tkMessageBox.showinfo("Error", "You must provide a name for your file!")
@@ -202,7 +202,7 @@ class crawl_subject_GUI:
                 path = os.path.join(dirname, sub)
                 # if the current item is a directory, recurse
                 if os.path.isdir(path):
-                    self.crawl_files_temp(path)
+                    self.crawl_files(path)
                 # else, here's a file to check
                 else:
                     # add file paths to tups if it fits criteria
