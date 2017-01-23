@@ -7,7 +7,7 @@ import re
 import shutil
 from pip._vendor.distlib.util import CSVWriter
 
-class crawl_subject_GUI:
+class crawl_subject_GUI(object):
     def __init__(self, master):
         self.start = 0
         # list of tups that holds the path -> file structure
