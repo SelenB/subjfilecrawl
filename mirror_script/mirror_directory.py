@@ -73,7 +73,8 @@ class mirror_directory(object):
             filepath = tup
             base_name = os.path.basename(filepath)
             localdir = os.path.dirname(filepath)
-            savepath = self.output_dir+localdir
+            #print(self.output_dir, localdir[1:])
+            savepath = os.path.join(self.output_dir,localdir[1:])
             try:
                 with open(savepath): pass
             except IOError:
