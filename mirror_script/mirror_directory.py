@@ -3,9 +3,13 @@ Created on Jan 20, 2017
 
 @author: nicky
 '''
-import Tkinter as tk
+try:
+    import Tkinter as tk  # for python2
+    import tkFileDialog as tkfiledialog
+except ImportError:
+    import tkinter as tk  # for python3
+    import tkinter.filedialog as tkfiledialog
 import os
-import tkFileDialog
 import subprocess
 
 class mirror_directory(object):
@@ -16,6 +20,8 @@ class mirror_directory(object):
         '''
         Constructor
         '''
+        self.input_count=0
+        self.output_count=0
         self.start=0
         self.lst = []
         self.init_gui(master)
@@ -53,6 +59,8 @@ class mirror_directory(object):
         self.start_button.pack(side=tk.BOTTOM, pady=(10,0))
         
     def mirror(self, dirname):
+        if os.listdir(dirname)==[]:
+            self.lst.append(dirname)
         try:
             for sub in os.listdir(dirname):
                 path = os.path.join(dirname, sub)
@@ -61,6 +69,7 @@ class mirror_directory(object):
                     self.mirror(path)
                 # else, here's a file to check
                 else:
+                    self.input_count+=1
                     self.lst.append(path)
         # this only happens if we don't have permissions to files
         except OSError as e:
@@ -70,6 +79,7 @@ class mirror_directory(object):
             
     def mirror_files(self, lst):
         for tup in lst:
+            self.output_count+=1
             filepath = tup
             base_name = os.path.basename(filepath)
             localdir = os.path.dirname(filepath)
@@ -84,17 +94,20 @@ class mirror_directory(object):
                 os.chdir(savepath)
                 subprocess.call(['touch', base_name])
                 os.chdir(pathBefore)
+        print("DONE")
+        print("Inputted: ", self.input_count)
+        print("Outputted: ", self.output_count)
                 
         
     def choose_directory(self, dir_type):
         if dir_type=="output":
             # save the output directory
-            self.output_dir =  tkFileDialog.askdirectory(**self.output_dir_opt)
+            self.output_dir =  tkfiledialog.askdirectory(**self.output_dir_opt)
             # update the GUI to reflect the change
             self.current_output_dir["text"] = self.output_dir
         else:
             # save the mirror directory
-            self.mirror_dir = tkFileDialog.askdirectory(**self.mirror_dir_opt)
+            self.mirror_dir = tkfiledialog.askdirectory(**self.mirror_dir_opt)
             # update the GUI to reflect the change
             self.current_mirror_dir["text"] = self.mirror_dir
         
