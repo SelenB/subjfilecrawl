@@ -179,6 +179,7 @@ class crawl_subject_GUI(object):
         newclan_merged_button.pack(anchor='w')
         accept = tk.Button(window, text="accept",command=window.destroy)
         accept.pack(side="bottom", pady=(10,0))
+        self.audio_clan_type.set("newclan_merged_final")
         
     def audio_basic_window(self):
         window = tk.Toplevel(root)
@@ -205,6 +206,7 @@ class crawl_subject_GUI(object):
         final_button.pack(anchor='w')
         consensus_button = tk.Radiobutton(window, text="consensus", variable=self.video_datavyu_type, value="consensus", command=self.video_datavyu_type.set("consensus"))
         consensus_button.pack(anchor='w')
+        self.video_datavyu_type.set("final")
         
     def video_basic_window(self):
         window = tk.Toplevel(root)
@@ -229,7 +231,7 @@ class crawl_subject_GUI(object):
                 # if the current item is a directory, recurse
                 if os.path.isdir(path):
                     # only recurse into dirs that lie within specified month ranges
-                    if re.match("[0-9]{2}_[0-9]{2}$", sub):
+                    if re.match(r'[0-9]{2}_[0-9]{2}$', sub):
                         splt = sub.split("_")
                         month = int(splt[1])
                         if debug:
@@ -241,16 +243,31 @@ class crawl_subject_GUI(object):
                     self.crawl_files(path)
                 # else, here's a file to check
                 else:
-                    self.tups.append((str(path), str(sub)))
+                    #self.tups.append((str(path), str(sub)))
                     # add file paths to tups if it fits criteria
                     if "audio_basic" in self.checked_boxes:
-                        pass
+                        if re.search(r'(check)\w{2,3}.csv$', sub):
+                            self.tups.append((str(path), str(sub)))
                     if "video_basic" in self.checked_boxes:
-                        pass
+                        if re.search(r'(check)\w+.csv$', sub):
+                            self.tups.append((str(path), str(sub)))
                     if "audio_clan" in self.checked_boxes:
-                        pass
+                        if self.audio_clan_type.get()=="newclan_merged_final":
+                            if re.search(r'newclan_merged_final\.(cex|cha)', sub):
+                                self.tups.append((str(path), str(sub)))
+                        if self.audio_clan_type.get()=='newclan_merged':
+                            if re.search(r'newclan_merged\.(cex|cha)', sub):
+                                self.tups.append((str(path), str(sub)))
+                        if self.audio_clan_type.get()=='final':
+                            if re.search(r'final\.(cex|cha)', sub):
+                                self.tups.append((str(path), str(sub)))
                     if "video_datavyu" in self.checked_boxes:
-                        pass
+                        if self.video_datavyu_type.get()=='final':
+                            if re.search(r'final\.(opf)', sub):
+                                self.tups.append((str(path), str(sub)))
+                        if self.video_datavyu_type.get()=='consensus':
+                            if re.search(r'consensus\.(opf)', sub):
+                                self.tups.append((str(path), str(sub)))
         # this only happens if we don't have permissions to files
         except OSError as e:
             print(e)
