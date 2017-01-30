@@ -1,6 +1,11 @@
-import Tkinter as tk
-import tkFileDialog
-import tkMessageBox
+try:
+    import Tkinter as tk  # for python2
+    import tkFileDialog as tkfiledialog
+    import tkMessageBox
+except ImportError:
+    import tkinter as tk  # for python3
+    import tkinter.filedialog as tkfiledialog
+    import tkinter.messagebox as tkMessageBox
 import csv
 import os
 import re
@@ -56,26 +61,30 @@ class crawl_subject_GUI(object):
         # options for audio annotations
         self.file_options_label = tk.Label(master, text="What kinds of files do you want?")
         self.file_options_label.pack(anchor='w')
-        self.audio_clan = tk.IntVar()
+        self.audio_clan = tk.BooleanVar()
         self.clan_file_option = tk.Checkbutton(master, variable = self.audio_clan, text="Audio clan files")
         self.clan_file_option.pack(anchor='w')
-        self.audio_basic = tk.IntVar()
+        self.audio_basic = tk.BooleanVar()
         self.audio_basic_option = tk.Checkbutton(master, variable = self.audio_basic, text="Basic audio files")
         self.audio_basic_option.pack(anchor='w')
-        self.video_datavyu = tk.IntVar()
+        self.video_datavyu = tk.BooleanVar()
         self.datavyu_file_option = tk.Checkbutton(master, variable = self.video_datavyu,text="Video datavyu files")
         self.datavyu_file_option.pack(anchor='w')
-        self.video_basic = tk.IntVar()
+        self.video_basic = tk.BooleanVar()
         self.video_basic_option = tk.Checkbutton(master, variable = self.video_basic, text="Basic video files")
         self.video_basic_option.pack(anchor='w')
         # month ranges
         startMonthLabel = tk.Label(master, text="Start Month:")
         startMonthLabel.pack(anchor="w")
-        self.start_month = tk.Spinbox(master, from_=0, to=10)
+        self.start_month_var = tk.StringVar()
+        self.start_month = tk.Spinbox(master, from_=6, to=18, textvariable=self.start_month_var, command=self.updateSpinbox)
+        self.start_month_var.set(6)
         self.start_month.pack(anchor='w')
         endMonthLabel = tk.Label(master, text="End Month:")
         endMonthLabel.pack(anchor="w")
-        self.end_month = tk.Spinbox(master, from_=1, to=10)
+        self.end_month_var = tk.StringVar()
+        self.end_month = tk.Spinbox(master, from_=6, to=18, textvariable=self.end_month_var, command=self.updateSpinbox)
+        self.end_month_var.set(18)
         self.end_month.pack(anchor="w")
         # start process
         self.start_button = tk.Button(master, text="start", command = lambda: self.crawl_files(self.crawl_dir))
@@ -87,8 +96,6 @@ class crawl_subject_GUI(object):
         
     def getCheckboxVals(self):
         self.start = 1
-        if self.start_month.get() > self.end_month.get():
-            tkMessageBox.showinfo("Error", "The start date must be before the end date!")
         self.checked_boxes = []
         if (self.audio_clan.get()):
             self.checked_boxes.append("audio_clan")
@@ -108,6 +115,12 @@ class crawl_subject_GUI(object):
             self.getSavePath()
             #self.close_button.invoke()
             
+    def updateSpinbox(self):
+        start=6
+        end=18
+        if int(self.start_month.get()) > int(self.end_month.get()):
+            self.end_month_var.set(self.start_month_var.get())
+            
     def enableEntry(self):
         self.copy_or_csv.set("csv")
         self.filename.configure(state="normal")
@@ -124,12 +137,12 @@ class crawl_subject_GUI(object):
     def choose_directory(self, dir_type):
         if dir_type=="output":
             # save the output directory
-            self.output_dir =  tkFileDialog.askdirectory(**self.output_dir_opt)
+            self.output_dir =  tkfiledialog.askdirectory(**self.output_dir_opt)
             # update the GUI to reflect the change
             self.current_output_dir["text"] = self.output_dir
         else:
             # save the crawl directory
-            self.crawl_dir = tkFileDialog.askdirectory(**self.crawl_dir_opt)
+            self.crawl_dir = tkfiledialog.askdirectory(**self.crawl_dir_opt)
             # update the GUI to reflect the change
             self.current_crawl_dir["text"] = self.crawl_dir
         
@@ -213,13 +226,21 @@ class crawl_subject_GUI(object):
                 path = os.path.join(dirname, sub)
                 # if the current item is a directory, recurse
                 if os.path.isdir(path):
+                    # only recurse into dirs that lie within specified month ranges
+                    if re.match("[0-9]{2}_[0-9]{2}$", sub):
+                        splt = sub.split("_")
+                        month = int(splt[1])
+                        print(sub, month)
+                        if month > int(self.end_month_var.get()) or month < int(self.start_month_var.get()):
+                            #print("MONTH: ", month, "START: ", self.start_month_var.get(), "END: ", self.end_month_var.get())
+                            continue
                     self.crawl_files(path)
                 # else, here's a file to check
                 else:
+                    self.tups.append((str(path), str(sub)))
                     # add file paths to tups if it fits criteria
                     if "audio_basic" in self.checked_boxes:
-                        if str(sub).endswith(".jpg"):
-                            self.tups.append((str(path), str(sub)))
+                        pass
                     if "video_basic" in self.checked_boxes:
                         pass
                     if "audio_clan" in self.checked_boxes:
@@ -228,7 +249,7 @@ class crawl_subject_GUI(object):
                         pass
         # this only happens if we don't have permissions to files
         except OSError as e:
-            print e
+            print(e)
         # once all of the items in the top level directory have been searched, we're done
         if dirname==self.crawl_dir:
             if self.copy_or_csv.get()=="copy":
