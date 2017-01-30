@@ -12,6 +12,8 @@ import re
 import shutil
 from pip._vendor.distlib.util import CSVWriter
 
+debug = False
+
 class crawl_subject_GUI(object):
     def __init__(self, master):
         self.start = 0
@@ -230,9 +232,11 @@ class crawl_subject_GUI(object):
                     if re.match("[0-9]{2}_[0-9]{2}$", sub):
                         splt = sub.split("_")
                         month = int(splt[1])
-                        print(sub, month)
+                        if debug:
+                            print(sub, month)
                         if month > int(self.end_month_var.get()) or month < int(self.start_month_var.get()):
-                            #print("MONTH: ", month, "START: ", self.start_month_var.get(), "END: ", self.end_month_var.get())
+                            if debug:
+                                print("MONTH: ", month, "START: ", self.start_month_var.get(), "END: ", self.end_month_var.get())
                             continue
                     self.crawl_files(path)
                 # else, here's a file to check
