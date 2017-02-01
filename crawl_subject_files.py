@@ -24,6 +24,10 @@ class crawl_subject_GUI(object):
     def init_gui(self, master):  
         self.master = master
         master.title("Get subject files")
+        # choose between recursing directory or scanning csv
+        self.recurse_or_scan = tk.BooleanVar()
+        self.recurse_or_scan_button = tk.Checkbutton(master, text='Check box to scan from csv.\n Leave empty to recurse directory.', variable=self.recurse_or_scan)
+        self.recurse_or_scan_button.pack(anchor='w')
         # close button
         self.close_button = tk.Button(master, text="close", command = master.quit)
         self.close_button.pack(side=tk.BOTTOM)
@@ -143,8 +147,13 @@ class crawl_subject_GUI(object):
             # update the GUI to reflect the change
             self.current_output_dir["text"] = self.output_dir
         else:
-            # save the crawl directory
-            self.crawl_dir = tkfiledialog.askdirectory(**self.crawl_dir_opt)
+            if self.recurse_or_scan.get():
+                # save the path to csv
+                FILEOPENOPTIONS = dict(filetypes=[('CSV file','*.csv')])
+                self.crawl_dir = tkfiledialog.askopenfilename(**FILEOPENOPTIONS)
+            else:
+                # save the crawl directory
+                self.crawl_dir = tkfiledialog.askdirectory(**self.crawl_dir_opt)
             # update the GUI to reflect the change
             self.current_crawl_dir["text"] = self.crawl_dir
         
@@ -218,8 +227,37 @@ class crawl_subject_GUI(object):
         label.config(font="bold")
         label.pack(anchor="w", padx=(10,10), pady=(10,10))
         self.video_basic_type = True
+        
+    def crawl_files(self, file_or_dirname):
+        self.tups=[]
+        if self.recurse_or_scan.get():
+            if not file_or_dirname.endswith('.csv'):
+                tkMessageBox.showinfo("Error", "You must provide a csv file to scan or uncheck the top box.")
+                return
+            self.crawl_files_from_csv(file_or_dirname)
+        else:
+            if not os.path.isdir(file_or_dirname):
+                tkMessageBox.showinfo("Error", "You must provide a directory to crawl.")
+                return
+            self.crawl_files_recursive(file_or_dirname)
+        
+    def crawl_files_from_csv(self, filename):
+        with open(filename, 'r') as f:
+            print("STARTING>>>")
+            reader = csv.reader(f, delimiter=',', )
+            #next(reader, None)
+            for row in reader:
+                self.update_tups(row[0], row[1])
+            # once done 
+            if self.copy_or_csv.get()=="copy":
+                print("COPYING>>>")
+                self.copy_files(self.tups)
+            else:
+                print("CSVING>>>")
+                self.copy_to_csv(self.tups)
+                
     
-    def crawl_files(self, dirname):
+    def crawl_files_recursive(self, dirname):
         # if the save file name is empty and you want a csv
         if not self.filename.get() and self.copy_or_csv.get()=="csv":
             tkMessageBox.showinfo("Error", "You must provide a name for your file!")
@@ -234,40 +272,14 @@ class crawl_subject_GUI(object):
                     if re.match(r'[0-9]{2}_[0-9]{2}$', sub):
                         splt = sub.split("_")
                         month = int(splt[1])
-                        if debug:
-                            print(sub, month)
                         if month > int(self.end_month_var.get()) or month < int(self.start_month_var.get()):
-                            if debug:
-                                print("MONTH: ", month, "START: ", self.start_month_var.get(), "END: ", self.end_month_var.get())
                             continue
-                    self.crawl_files(path)
+                    self.crawl_files_recursive(path)
                 # else, here's a file to check
                 else:
                     #self.tups.append((str(path), str(sub)))
                     # add file paths to tups if it fits criteria
-                    if "audio_basic" in self.checked_boxes:
-                        if re.search(r'(check)\w{2,3}.csv$', sub):
-                            self.tups.append((str(path), str(sub)))
-                    if "video_basic" in self.checked_boxes:
-                        if re.search(r'(check)\w+.csv$', sub):
-                            self.tups.append((str(path), str(sub)))
-                    if "audio_clan" in self.checked_boxes:
-                        if self.audio_clan_type.get()=="newclan_merged_final":
-                            if re.search(r'newclan_merged_final\.(cex|cha)', sub):
-                                self.tups.append((str(path), str(sub)))
-                        if self.audio_clan_type.get()=='newclan_merged':
-                            if re.search(r'newclan_merged\.(cex|cha)', sub):
-                                self.tups.append((str(path), str(sub)))
-                        if self.audio_clan_type.get()=='final':
-                            if re.search(r'final\.(cex|cha)', sub):
-                                self.tups.append((str(path), str(sub)))
-                    if "video_datavyu" in self.checked_boxes:
-                        if self.video_datavyu_type.get()=='final':
-                            if re.search(r'final\.(opf)', sub):
-                                self.tups.append((str(path), str(sub)))
-                        if self.video_datavyu_type.get()=='consensus':
-                            if re.search(r'consensus\.(opf)', sub):
-                                self.tups.append((str(path), str(sub)))
+                    self.update_tups(path, sub)
         # this only happens if we don't have permissions to files
         except OSError as e:
             print(e)
@@ -277,6 +289,7 @@ class crawl_subject_GUI(object):
                 self.copy_files(self.tups)
             else:
                 self.copy_to_csv(self.tups)
+            
     
     def copy_to_csv(self, lst):
         x = self.save_filename
@@ -299,6 +312,33 @@ class crawl_subject_GUI(object):
                 if not os.path.exists(savepath):
                     os.makedirs(savepath)
                 shutil.copy(filepath, savepath)
+                
+    def update_tups(self, path, sub):
+        if "audio_basic" in self.checked_boxes:
+            if re.search(r'(audio_check)\w{2,3}.csv$', sub):
+                self.tups.append((str(path), str(sub)))
+        if "video_basic" in self.checked_boxes:
+            if re.search(r'(video_check)\w+.csv$', sub):
+                self.tups.append((str(path), str(sub)))
+        if "audio_clan" in self.checked_boxes:
+            if self.audio_clan_type.get()=="newclan_merged_final":
+                if re.search(r'newclan_merged_final\.(cex|cha)$', sub):
+                    self.tups.append((str(path), str(sub)))
+            if self.audio_clan_type.get()=='newclan_merged':
+                if re.search(r'newclan_merged\.(cex|cha)$', sub):
+                    self.tups.append((str(path), str(sub)))
+            if self.audio_clan_type.get()=='final':
+                if re.search(r'final\.(cex|cha)$', sub):
+                    self.tups.append((str(path), str(sub)))
+        if "video_datavyu" in self.checked_boxes:
+            if self.video_datavyu_type.get()=='final':
+                if re.search(r'final\.(opf)$', sub):
+                    self.tups.append((str(path), str(sub)))
+            if self.video_datavyu_type.get()=='consensus':
+                if re.search(r'consensus\.(opf)$', sub):
+                    self.tups.append((str(path), str(sub)))
+        
+        
             
 if __name__=="__main__":
     root = tk.Tk()
