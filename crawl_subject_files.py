@@ -79,6 +79,23 @@ class crawl_subject_GUI(object):
         self.video_basic = tk.BooleanVar()
         self.video_basic_option = tk.Checkbutton(master, variable = self.video_basic, text="Basic video files")
         self.video_basic_option.pack(anchor='w')
+        self.silences=tk.BooleanVar()
+        self.silences_option = tk.Checkbutton(master, variable=self.silences, text="Silence.txt files")
+        self.silences_option.pack(anchor='w')
+        self.lena5min = tk.BooleanVar()
+        self.lena5min_option = tk.Checkbutton(master, variable=self.lena5min, text="lena5min files")
+        self.lena5min_option.pack(anchor='w')
+        self.video_mp4 = tk.BooleanVar()
+        self.video_mp4_option = tk.Checkbutton(master, variable=self.video_mp4, text="Video mp4 files")
+        self.video_mp4_option.pack(anchor='w')
+        self.audio_wav = tk.BooleanVar()
+        self.audio_wav_option = tk.Checkbutton(master, variable=self.audio_wav, text="Audio wav files")
+        self.audio_wav_option.pack(anchor='w')
+        self.custom_regex = tk.BooleanVar()
+        self.custom_regex_option = tk.Checkbutton(master, variable=self.custom_regex, text="Write your own regex")
+        self.custom_regex_option.pack(anchor='w')
+        self.custom_regex_text = tk.Entry(master)
+        self.custom_regex_text.pack(anchor="w", padx=(20, 0), pady=(0,10))
         # month ranges
         startMonthLabel = tk.Label(master, text="Start Month:")
         startMonthLabel.pack(anchor="w")
@@ -111,6 +128,16 @@ class crawl_subject_GUI(object):
             self.checked_boxes.append("video_datavyu")
         if (self.video_basic.get()):
             self.checked_boxes.append("video_basic")
+        if (self.silences.get()):
+            self.checked_boxes.append("silences")
+        if (self.lena5min.get()):
+            self.checked_boxes.append("lena5min")
+        if (self.video_mp4.get()):
+            self.checked_boxes.append("video_mp4")
+        if (self.audio_wav.get()):
+            self.checked_boxes.append("audio_wav")
+        if (self.custom_regex.get()):
+            self.checked_boxes.append("custom_regex")
         self.file_types = self.checked_boxes
         if len(self.checked_boxes) == 0:
             tkMessageBox.showinfo("Error", "You must select at least one type of file")
@@ -119,6 +146,7 @@ class crawl_subject_GUI(object):
                 self.create_new_window(item)
             self.start_button.config(state="normal")
             self.getSavePath()
+            self.custom_regex_text.update()
             #self.close_button.invoke()
             
     def updateSpinbox(self):
@@ -126,6 +154,7 @@ class crawl_subject_GUI(object):
         end=18
         if int(self.start_month.get()) > int(self.end_month.get()):
             self.end_month_var.set(self.start_month_var.get())
+
             
     def enableEntry(self):
         self.copy_or_csv.set("csv")
@@ -164,6 +193,10 @@ class crawl_subject_GUI(object):
         self.video_datavyu_type = tk.StringVar()
         self.video_datavyu_type.set("None")
         self.video_basic_type = False
+        self.silences_type = False
+        self.lena5min_type = False
+        self.video_mp4_type = False
+        self.audio_wav_type = tk.StringVar()
         if option == "audio_clan":
             self.audio_clan_window()
         if option == "audio_basic":
@@ -172,6 +205,14 @@ class crawl_subject_GUI(object):
             self.video_datavyu_window()
         if option == "video_basic":
             self.video_basic_window()
+        if option == "silences":
+            self.silences_window()
+        if option == "lena5min":
+            self.lena5min_window()
+        if option == "video_mp4":
+            self.video_mp4_window()
+        if option == "audio_wav":
+            self.audio_wav_window()
     
     def audio_clan_window(self):
         window = tk.Toplevel(root)
@@ -180,12 +221,14 @@ class crawl_subject_GUI(object):
         label = tk.Label(window, text="Choose which audio clan files you want")
         label.config(font="bold")
         label.pack(anchor="w", padx=(10,10), pady=(10,10))
+        silences_button = tk.Radiobutton(window, text='silences', variable=self.audio_clan_type, value='silences', command=self.audio_clan_type.set('silences'))
         newclan_merged_button = tk.Radiobutton(window, text="newclan_merged", variable=self.audio_clan_type, value="newclan_merged", command=self.audio_clan_type.set("newclan_merged"))
         final_button = tk.Radiobutton(window, text="final", variable=self.audio_clan_type, value="final", command=self.audio_clan_type.set("final"))
         newclan_merged_final_button = tk.Radiobutton(window, text="newclan_merged_final", variable = self.audio_clan_type, value="newclan_merged_final", command=self.audio_clan_type.set("newclan_merged_final"))
         newclan_merged_final_button.pack(anchor='w')
         final_button.pack(anchor='w')
         newclan_merged_button.pack(anchor='w')
+        silences_button.pack(anchor='w')
         accept = tk.Button(window, text="accept",command=window.destroy)
         accept.pack(side="bottom", pady=(10,0))
         self.audio_clan_type.set("newclan_merged_final")
@@ -228,7 +271,57 @@ class crawl_subject_GUI(object):
         label.pack(anchor="w", padx=(10,10), pady=(10,10))
         self.video_basic_type = True
         
+    def silences_window(self):
+        window = tk.Toplevel(root)
+        window.title("Silence options")
+        window.overrideredirect(1)
+        accept = tk.Button(window, text="accept", command=window.destroy)
+        accept.pack(side="bottom", pady=(10,0))
+        label = tk.Label(window, text="silences.txt files are the only option for silence files")
+        label.config(font="bold")
+        label.pack(anchor='w', padx=(10,10), pady=(10,10))
+        self.silences_type = True
+        
+    def lena5min_window(self):
+        window=tk.Toplevel(root)
+        window.title("lena5min options")
+        window.overrideredirect(1)
+        accept = tk.Button(window, text="accept", command=window.destroy)
+        accept.pack(side="bottom", pady=(10,0))
+        label = tk.Label(window, text="lena5min.csv files are the only option for lena5min")
+        label.config(font="bold")
+        label.pack(anchor='w', padx=(10,10), pady=(10,10))
+        self.lena5min_type=True
+    
+    def video_mp4_window(self):
+        window=tk.Toplevel(root)
+        window.title("video_mp4 options")
+        window.overrideredirect(1)
+        accept = tk.Button(window, text="accept", command=window.destroy)
+        accept.pack(side="bottom", pady=(10,0))
+        label = tk.Label(window, text=".mp4 files are the only option for video_mp4 files")
+        label.config(font="bold")
+        label.pack(anchor='w', padx=(10,10), pady=(10,10))
+        self.lena5min_type=True
+        
+    def audio_wav_window(self):
+        window = tk.Toplevel(root)
+        window.title("Audio wav options")
+        window.overrideredirect(1)
+        accept = tk.Button(window, text="accept", command=window.destroy)
+        accept.pack(side="bottom", pady=(10,0))
+        label = tk.Label(window, text="Choose which audio wav files you want")
+        label.config(font="bold")
+        label.pack(anchor="w", padx=(10,10), pady=(10,10))
+        button = tk.StringVar()
+        scrubbed_button = tk.Radiobutton(window, text="scrubbed", variable=self.audio_wav_type, value="scrubbed", command=self.audio_wav_type.set("scrubbed"))
+        scrubbed_button.pack(anchor='w')
+        unscrubbed_button = tk.Radiobutton(window, text="unscrubbed", variable=self.audio_wav_type, value="unscrubbed", command=self.audio_wav_type.set("unscrubbed"))
+        unscrubbed_button.pack(anchor='w')
+
+        
     def crawl_files(self, file_or_dirname):
+        self.start_button.config(state="disable")
         self.tups=[]
         if self.recurse_or_scan.get():
             if not file_or_dirname.endswith('.csv'):
@@ -245,7 +338,7 @@ class crawl_subject_GUI(object):
         with open(filename, 'r') as f:
             print("STARTING>>>")
             reader = csv.reader(f, delimiter=',', )
-            #next(reader, None)
+            next(reader, None)
             for row in reader:
                 self.update_tups(row[0], row[1])
             # once done 
@@ -255,6 +348,7 @@ class crawl_subject_GUI(object):
             else:
                 print("CSVING>>>")
                 self.copy_to_csv(self.tups)
+        print("DONE")
                 
     
     def crawl_files_recursive(self, dirname):
@@ -314,11 +408,21 @@ class crawl_subject_GUI(object):
                 shutil.copy(filepath, savepath)
                 
     def update_tups(self, path, sub):
+        
         if "audio_basic" in self.checked_boxes:
             if re.search(r'(audio_check)\w{2,3}.csv$', sub):
                 self.tups.append((str(path), str(sub)))
         if "video_basic" in self.checked_boxes:
             if re.search(r'(video_check)\w+.csv$', sub):
+                self.tups.append((str(path), str(sub)))
+        if "silences" in self.checked_boxes:
+            if re.search(r'silences\.txt$', sub):
+                self.tups.append((str(path), str(sub)))
+        if "lena5min" in self.checked_boxes:
+            if re.search(r'lena5min\.csv$', sub):
+                self.tups.append((str(path), str(sub)))
+        if "video_mp4" in self.checked_boxes:
+            if re.search(r'\.mp4$', sub):
                 self.tups.append((str(path), str(sub)))
         if "audio_clan" in self.checked_boxes:
             if self.audio_clan_type.get()=="newclan_merged_final":
@@ -330,6 +434,9 @@ class crawl_subject_GUI(object):
             if self.audio_clan_type.get()=='final':
                 if re.search(r'final\.(cex|cha)$', sub):
                     self.tups.append((str(path), str(sub)))
+            if self.audio_clan_type.get()=='silences':
+                if re.search(r'silences.*(cex|cha)$', sub):
+                    self.tups.append((str(path), str(sub)))
         if "video_datavyu" in self.checked_boxes:
             if self.video_datavyu_type.get()=='final':
                 if re.search(r'final\.(opf)$', sub):
@@ -337,6 +444,16 @@ class crawl_subject_GUI(object):
             if self.video_datavyu_type.get()=='consensus':
                 if re.search(r'consensus\.(opf)$', sub):
                     self.tups.append((str(path), str(sub)))
+        if "audio_wav" in self.checked_boxes:
+            if self.audio_wav_type.get()=='scrubbed':
+                if re.search(r'scrubbed.*wav$', sub):
+                    self.tups.append((str(path), str(sub)))
+            if self.audio_wav_type.get()=='unscrubbed':
+                if re.search(r'\.wav$', sub) and "scrubbed" not in sub:
+                    self.tups.append((str(path), str(sub)))
+        if "custom_regex" in self.checked_boxes:
+            if re.search(self.custom_regex_text.get(), sub):
+                self.tups.append((str(path), str(sub)))
         
         
             
