@@ -11,6 +11,8 @@ import os
 import re
 import shutil
 from pip._vendor.distlib.util import CSVWriter
+import mirror_script.mirror_directory as mirror
+
 
 debug = False
 
@@ -24,6 +26,9 @@ class crawl_subject_GUI(object):
     def init_gui(self, master):  
         self.master = master
         master.title("Get subject files")
+        # open up mirror directory popup
+        self.mirror_button = tk.Button(master, text="Create mirror", command = lambda: self.popup_mirror())
+        self.mirror_button.pack(anchor='n')
         # choose between recursing directory or scanning csv
         self.recurse_or_scan = tk.BooleanVar()
         self.recurse_or_scan_button = tk.Checkbutton(master, text='Check box to scan from csv.\n Leave empty to recurse directory.', variable=self.recurse_or_scan)
@@ -116,6 +121,10 @@ class crawl_subject_GUI(object):
         # next button
         self.next_button = tk.Button(master, text="next", command = self.getCheckboxVals)
         self.next_button.pack(side=tk.BOTTOM, pady=(10,0))
+        
+    def popup_mirror(self):
+        window = tk.Toplevel(root)
+        inst = mirror.mirror_directory(window)
         
     def getCheckboxVals(self):
         self.start = 1
@@ -336,17 +345,20 @@ class crawl_subject_GUI(object):
         
     def crawl_files_from_csv(self, filename):
         with open(filename, 'r') as f:
-            print("STARTING>>>")
             reader = csv.reader(f, delimiter=',', )
             next(reader, None)
             for row in reader:
+                m = re.search(r'[0-9]{2}_[0-9]{2}/', row[0])
+                if re.search(r'[0-9]{2}_[0-9]{2}/', row[0]):
+                    splt = m.group(0).split("_")
+                    month = int(splt[1].strip('/'))
+                    if month > int(self.end_month_var.get()) or month < int(self.start_month_var.get()):
+                        continue
                 self.update_tups(row[0], row[1])
             # once done 
             if self.copy_or_csv.get()=="copy":
-                print("COPYING>>>")
                 self.copy_files(self.tups)
             else:
-                print("CSVING>>>")
                 self.copy_to_csv(self.tups)
         print("DONE")
                 
@@ -366,6 +378,7 @@ class crawl_subject_GUI(object):
                     if re.match(r'[0-9]{2}_[0-9]{2}$', sub):
                         splt = sub.split("_")
                         month = int(splt[1])
+                        print(month, self.end_month_var.get(), self.start_month_var.get())
                         if month > int(self.end_month_var.get()) or month < int(self.start_month_var.get()):
                             continue
                     self.crawl_files_recursive(path)
@@ -394,6 +407,7 @@ class crawl_subject_GUI(object):
             writer.writerow(["full path", "file name"])
             for item in lst:
                 writer.writerow(item)
+        tkMessageBox.showinfo("Completed", "Directory successfully copied to csv!") 
                 
     def copy_files(self, lst):
         for tup in lst:
@@ -406,6 +420,7 @@ class crawl_subject_GUI(object):
                 if not os.path.exists(savepath):
                     os.makedirs(savepath)
                 shutil.copy(filepath, savepath)
+        tkMessageBox.showinfo("Completed", "Directory successfully copied!") 
                 
     def update_tups(self, path, sub):
         

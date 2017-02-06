@@ -6,11 +6,15 @@ Created on Jan 20, 2017
 try:
     import Tkinter as tk  # for python2
     import tkFileDialog as tkfiledialog
+    import tkMessageBox
+    from Tkinter import ttk
 except ImportError:
     import tkinter as tk  # for python3
     import tkinter.filedialog as tkfiledialog
-import os
-import subprocess
+    import tkinter.messagebox as tkMessageBox
+    from tkinter import ttk
+import os, subprocess, re, csv
+from math import trunc
 
 class mirror_directory(object):
     '''
@@ -20,17 +24,15 @@ class mirror_directory(object):
         '''
         Constructor
         '''
-        self.input_count=0
-        self.output_count=0
         self.start=0
         self.lst = []
-        self.init_gui(master)
+        self.init_gui_mirror(master)
         
-    def init_gui(self, master):
+    def init_gui_mirror(self, master):
         self.master = master
         master.title("Mirror directory")
         # close button
-        self.close_button = tk.Button(master, text="close", command = master.quit)
+        self.close_button = tk.Button(master, text="close", command = lambda: master.destroy())
         self.close_button.pack(side=tk.BOTTOM)
         # label for mirror directory
         self.mirror_dir = os.getcwd()
@@ -54,13 +56,39 @@ class mirror_directory(object):
         self.choose_output_directory_button = tk.Button(master, text="Browse", command=lambda: self.choose_directory("output"))
         self.choose_output_directory_button.pack(anchor='center', pady=(0,10))
         self.output_dir_opt = options
+        # choose to save as csv or copy files to directory
+        self.copy_or_csv = tk.StringVar()
+        self.saveLabel = tk.Label(master, text="What do you want to do with these files?")
+        self.saveLabel.pack(anchor='w')
+        self.filename = tk.Entry(master)
+        self.copy_files_radio = tk.Radiobutton(master, text="copy files to output directory", variable=self.copy_or_csv, value="copy", command=self.disableEntry)
+        self.copy_files_radio.pack(anchor="w", padx=(20, 0))
+        self.save_as_CSV_radio = tk.Radiobutton(master, text="save as CSV of all filepaths in output directory.\n File name:", variable=self.copy_or_csv,value="csv", command=self.enableEntry, justify="left")
+        self.save_as_CSV_radio.pack(anchor="w", padx=(20,0))
+        self.filename.pack(anchor="w", padx=(48, 0), pady=(0,10))
+        self.copy_files_radio.invoke()
         # start process
         self.start_button = tk.Button(master, text="start", command = lambda: self.mirror(self.mirror_dir))
         self.start_button.pack(side=tk.BOTTOM, pady=(10,0))
         
+        
+    def enableEntry(self):
+        self.copy_or_csv.set("csv")
+        self.filename.configure(state="normal")
+        self.filename.update()
+        
+    def disableEntry(self):
+        self.copy_or_csv.set("copy")
+        self.filename.configure(state="disabled")
+        self.filename.update()
+
+    def getSavePath(self):
+        x = self.filename.get()
+        self.save_filename = x
+        
     def mirror(self, dirname):
         if os.listdir(dirname)==[]:
-            self.lst.append(dirname)
+            self.lst.append((dirname, ""))
         try:
             for sub in os.listdir(dirname):
                 path = os.path.join(dirname, sub)
@@ -69,21 +97,40 @@ class mirror_directory(object):
                     self.mirror(path)
                 # else, here's a file to check
                 else:
-                    self.input_count+=1
-                    self.lst.append(path)
+                    self.lst.append((path, sub))
         # this only happens if we don't have permissions to files
         except OSError as e:
             print(e)
         if dirname==self.mirror_dir:
             self.mirror_files(self.lst)
+            self.lst = []
             
     def mirror_files(self, lst):
+        if not self.filename.get()and self.copy_or_csv.get()=='csv':
+            tkMessageBox.showinfo("Error", "You must provide a name for your file!")
+            return
+        elif self.copy_or_csv.get() == 'csv':
+            self.mirror_files_to_csv(self.lst)
+        else:
+            self.mirror_files_recursive(self.lst)
+        
+    def mirror_files_to_csv(self, lst):
+        self.getSavePath()
+        x = self.save_filename
+        if not re.match("(.csv)$", self.save_filename):
+            x+=".csv"
+        with open(self.output_dir+'/'+x, 'a') as f:
+            writer = csv.writer(f)
+            writer.writerow(["full path", "file name"])
+            for item in lst:
+                writer.writerow(item)    
+        tkMessageBox.showinfo("Completed", "Directory successfully mirrored!")  
+            
+    def mirror_files_recursive(self, lst):
         for tup in lst:
-            self.output_count+=1
-            filepath = tup
+            filepath = tup[0]
             base_name = os.path.basename(filepath)
             localdir = os.path.dirname(filepath)
-            #print(self.output_dir, localdir[1:])
             savepath = os.path.join(self.output_dir,localdir[1:])
             try:
                 with open(savepath): pass
@@ -94,10 +141,7 @@ class mirror_directory(object):
                 os.chdir(savepath)
                 subprocess.call(['touch', base_name])
                 os.chdir(pathBefore)
-        print("DONE")
-        print("Inputted: ", self.input_count)
-        print("Outputted: ", self.output_count)
-                
+        tkMessageBox.showinfo("Completed", "Directory successfully mirrored!")       
         
     def choose_directory(self, dir_type):
         if dir_type=="output":
