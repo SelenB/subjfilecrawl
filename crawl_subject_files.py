@@ -117,6 +117,10 @@ class crawl_subject_GUI(object):
         self.end_month = tk.Spinbox(master, from_=6, to=18, textvariable=self.end_month_var, command=self.updateSpinbox)
         self.end_month_var.set(18)
         self.end_month.pack(anchor="w")
+        # subject ranges
+        self.chosen_subjects = range(1,47)
+        self.choose_subjects = tk.Button(master, text="Choose subjects (default is all)", command = lambda:self.choose_subjects_window())
+        self.choose_subjects.pack(anchor='w')
         # start process
         self.start_button = tk.Button(master, text="start", command = lambda: self.crawl_files(self.crawl_dir))
         self.start_button.config(state="disable")
@@ -125,6 +129,43 @@ class crawl_subject_GUI(object):
         self.next_button = tk.Button(master, text="next", command = self.getCheckboxVals)
         self.next_button.pack(side=tk.BOTTOM, pady=(10,0))
         
+    def choose_subjects_window(self):
+        window = tk.Toplevel(root)
+        window.title("Choose subjects")
+        close = tk.Button(window, text="close",command=window.destroy)
+        close.pack(side=tk.BOTTOM, pady=(10,0))
+        top = tk.Frame(window)
+        top.pack(side=tk.BOTTOM)
+        bottom = tk.Frame(window)
+        bottom.pack(side=tk.BOTTOM)
+        label = tk.Label(window, text="Choose subjects")
+        label.pack(anchor='w', padx=(120,10), pady=(10,10))
+        left_scrollbar = tk.Scrollbar(window)
+        left_scrollbar.pack(in_=bottom, side='left', fill="y")
+        self.listbox = tk.Listbox(window, selectmode="multiple")
+        self.listbox.config(yscrollcommand=left_scrollbar.set)
+        self.listbox.pack(in_=bottom,side='left')
+        left_scrollbar.config(command=self.listbox.yview)
+        for i in range(1,47):
+            self.listbox.insert(i, i)
+        update = tk.Button(window, text="update", command = lambda: self.update_subjects_chosen())
+        update.pack(in_=bottom, side='left')
+        self.curr_selection = tk.Listbox(window)
+        self.curr_selection.pack(in_=bottom,side='left')
+        right_scrollbar = tk.Scrollbar(window)
+        right_scrollbar.pack(in_=bottom, side='left', fill='y')
+        self.curr_selection.config(yscrollcommand=right_scrollbar.set)
+        right_scrollbar.config(command=self.curr_selection.yview)
+        for i in self.chosen_subjects:
+            self.curr_selection.insert(i,i)
+        
+    def update_subjects_chosen(self):
+        self.chosen_subjects = [x+1 for x in self.listbox.curselection()]
+        self.curr_selection.delete(0, tk.END)
+        print(self.chosen_subjects)
+        for i in self.chosen_subjects:
+            self.curr_selection.insert(i,i)
+
     def popup_mirror(self):
         window = tk.Toplevel(root)
         inst = mirror.mirror_directory(window)
