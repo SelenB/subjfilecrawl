@@ -11,6 +11,8 @@ import os
 import re
 import shutil
 from pip._vendor.distlib.util import CSVWriter
+import mirror_script.mirror_directory as mirror
+
 
 debug = False
 
@@ -24,6 +26,9 @@ class crawl_subject_GUI(object):
     def init_gui(self, master):  
         self.master = master
         master.title("Get subject files")
+        # open up mirror directory popup
+        self.mirror_button = tk.Button(master, text="Create mirror", command = lambda: self.popup_mirror())
+        self.mirror_button.pack(anchor='n')
         # choose between recursing directory or scanning csv
         self.recurse_or_scan = tk.BooleanVar()
         self.recurse_or_scan_button = tk.Checkbutton(master, text='Check box to scan from csv.\n Leave empty to recurse directory.', variable=self.recurse_or_scan)
@@ -60,6 +65,9 @@ class crawl_subject_GUI(object):
         self.filename = tk.Entry(master)
         self.copy_files_radio = tk.Radiobutton(master, text="copy files to output directory", variable=self.copy_or_csv, value="copy", command=self.disableEntry)
         self.copy_files_radio.pack(anchor="w", padx=(20, 0))
+        self.dump_or_keep = tk.BooleanVar()
+        self.dump_or_keep_button = tk.Checkbutton(master, text='Check to dump files to output directory.\nLeave unchecked to keep directory structure.', variable=self.dump_or_keep)
+        self.dump_or_keep_button.pack(anchor='w', padx=(40, 0))
         self.save_as_CSV_radio = tk.Radiobutton(master, text="save as CSV of all filepaths in output directory.\n File name:", variable=self.copy_or_csv,value="csv", command=self.enableEntry, justify="left")
         self.save_as_CSV_radio.pack(anchor="w", padx=(20,0))
         self.filename.pack(anchor="w", padx=(48, 0), pady=(0,10))
@@ -109,6 +117,10 @@ class crawl_subject_GUI(object):
         self.end_month = tk.Spinbox(master, from_=6, to=18, textvariable=self.end_month_var, command=self.updateSpinbox)
         self.end_month_var.set(18)
         self.end_month.pack(anchor="w")
+        # subject ranges
+        self.chosen_subjects = range(1,47)
+        self.choose_subjects = tk.Button(master, text="Choose subjects (default is all)", command = lambda:self.choose_subjects_window())
+        self.choose_subjects.pack(anchor='w')
         # start process
         self.start_button = tk.Button(master, text="start", command = lambda: self.crawl_files(self.crawl_dir))
         self.start_button.config(state="disable")
@@ -116,6 +128,46 @@ class crawl_subject_GUI(object):
         # next button
         self.next_button = tk.Button(master, text="next", command = self.getCheckboxVals)
         self.next_button.pack(side=tk.BOTTOM, pady=(10,0))
+        
+    def choose_subjects_window(self):
+        window = tk.Toplevel(root)
+        window.title("Choose subjects")
+        close = tk.Button(window, text="close",command=window.destroy)
+        close.pack(side=tk.BOTTOM, pady=(10,0))
+        top = tk.Frame(window)
+        top.pack(side=tk.BOTTOM)
+        bottom = tk.Frame(window)
+        bottom.pack(side=tk.BOTTOM)
+        label = tk.Label(window, text="Choose subjects")
+        label.pack(anchor='w', padx=(120,10), pady=(10,10))
+        left_scrollbar = tk.Scrollbar(window)
+        left_scrollbar.pack(in_=bottom, side='left', fill="y")
+        self.listbox = tk.Listbox(window, selectmode="multiple")
+        self.listbox.config(yscrollcommand=left_scrollbar.set)
+        self.listbox.pack(in_=bottom,side='left')
+        left_scrollbar.config(command=self.listbox.yview)
+        for i in range(1,47):
+            self.listbox.insert(i, i)
+        update = tk.Button(window, text="update", command = lambda: self.update_subjects_chosen())
+        update.pack(in_=bottom, side='left')
+        self.curr_selection = tk.Listbox(window)
+        self.curr_selection.pack(in_=bottom,side='left')
+        right_scrollbar = tk.Scrollbar(window)
+        right_scrollbar.pack(in_=bottom, side='left', fill='y')
+        self.curr_selection.config(yscrollcommand=right_scrollbar.set)
+        right_scrollbar.config(command=self.curr_selection.yview)
+        for i in self.chosen_subjects:
+            self.curr_selection.insert(i,i)
+        
+    def update_subjects_chosen(self):
+        self.chosen_subjects = [x+1 for x in self.listbox.curselection()]
+        self.curr_selection.delete(0, tk.END)
+        for i in self.chosen_subjects:
+            self.curr_selection.insert(i,i)
+
+    def popup_mirror(self):
+        window = tk.Toplevel(root)
+        inst = mirror.mirror_directory(window)
         
     def getCheckboxVals(self):
         self.start = 1
@@ -154,16 +206,17 @@ class crawl_subject_GUI(object):
         end=18
         if int(self.start_month.get()) > int(self.end_month.get()):
             self.end_month_var.set(self.start_month_var.get())
-
-            
+       
     def enableEntry(self):
         self.copy_or_csv.set("csv")
         self.filename.configure(state="normal")
+        self.dump_or_keep_button.configure(state='disabled')
         self.filename.update()
         
     def disableEntry(self):
         self.copy_or_csv.set("copy")
         self.filename.configure(state="disabled")
+        self.dump_or_keep_button.configure(state='normal')
         self.filename.update()
     
     def getSavePath(self):
@@ -323,6 +376,7 @@ class crawl_subject_GUI(object):
     def crawl_files(self, file_or_dirname):
         self.start_button.config(state="disable")
         self.tups=[]
+        print(self.chosen_subjects)
         if self.recurse_or_scan.get():
             if not file_or_dirname.endswith('.csv'):
                 tkMessageBox.showinfo("Error", "You must provide a csv file to scan or uncheck the top box.")
@@ -336,20 +390,29 @@ class crawl_subject_GUI(object):
         
     def crawl_files_from_csv(self, filename):
         with open(filename, 'r') as f:
-            print("STARTING>>>")
             reader = csv.reader(f, delimiter=',', )
             next(reader, None)
             for row in reader:
+                # filtering by month
+                m = re.search(r'[0-9]{2}_[0-9]{2}/', row[0])
+                if re.search(r'[0-9]{2}_[0-9]{2}/', row[0]):
+                    splt = m.group(0).split("_")
+                    month = int(splt[1].strip('/'))
+                    if month > int(self.end_month_var.get()) or month < int(self.start_month_var.get()):
+                        continue
+                # filtering by subject
+                n = re.search(r'[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{4}', row[0])
+                if re.search(r'[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{4}', row[0]):
+                    splt = n.group(0).split("_")
+                    subject = int(splt[0])
+                    if subject not in self.chosen_subjects:
+                        continue
                 self.update_tups(row[0], row[1])
             # once done 
             if self.copy_or_csv.get()=="copy":
-                print("COPYING>>>")
                 self.copy_files(self.tups)
             else:
-                print("CSVING>>>")
-                self.copy_to_csv(self.tups)
-        print("DONE")
-                
+                self.copy_to_csv(self.tups)                
     
     def crawl_files_recursive(self, dirname):
         # if the save file name is empty and you want a csv
@@ -367,6 +430,11 @@ class crawl_subject_GUI(object):
                         splt = sub.split("_")
                         month = int(splt[1])
                         if month > int(self.end_month_var.get()) or month < int(self.start_month_var.get()):
+                            continue
+                    if re.search(r'[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{4}', sub):
+                        splt = sub.split("_")
+                        subject = int(splt[0])
+                        if subject not in self.chosen_subjects:
                             continue
                     self.crawl_files_recursive(path)
                 # else, here's a file to check
@@ -394,18 +462,26 @@ class crawl_subject_GUI(object):
             writer.writerow(["full path", "file name"])
             for item in lst:
                 writer.writerow(item)
+        tkMessageBox.showinfo("Completed", "Directory successfully copied to csv!") 
                 
     def copy_files(self, lst):
-        for tup in lst:
-            filepath = tup[0]
-            localdir = os.path.dirname(filepath)
-            savepath = self.output_dir+localdir
-            try:
-                with open(savepath) as f: pass
-            except IOError as e:
-                if not os.path.exists(savepath):
-                    os.makedirs(savepath)
+        if self.dump_or_keep.get():
+            for tup in lst:
+                filepath = tup[0]
+                savepath = self.output_dir
                 shutil.copy(filepath, savepath)
+        else:
+            for tup in lst:
+                filepath = tup[0]
+                localdir = os.path.dirname(filepath)
+                savepath = self.output_dir+localdir
+                try:
+                    with open(savepath) as f: pass
+                except IOError as e:
+                    if not os.path.exists(savepath):
+                        os.makedirs(savepath)
+                    shutil.copy(filepath, savepath)
+        tkMessageBox.showinfo("Completed", "Directory successfully copied!") 
                 
     def update_tups(self, path, sub):
         
