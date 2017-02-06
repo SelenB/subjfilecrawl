@@ -65,6 +65,9 @@ class crawl_subject_GUI(object):
         self.filename = tk.Entry(master)
         self.copy_files_radio = tk.Radiobutton(master, text="copy files to output directory", variable=self.copy_or_csv, value="copy", command=self.disableEntry)
         self.copy_files_radio.pack(anchor="w", padx=(20, 0))
+        self.dump_or_keep = tk.BooleanVar()
+        self.dump_or_keep_button = tk.Checkbutton(master, text='Check to dump files to output directory.\nLeave unchecked to keep directory structure.', variable=self.dump_or_keep)
+        self.dump_or_keep_button.pack(anchor='w', padx=(40, 0))
         self.save_as_CSV_radio = tk.Radiobutton(master, text="save as CSV of all filepaths in output directory.\n File name:", variable=self.copy_or_csv,value="csv", command=self.enableEntry, justify="left")
         self.save_as_CSV_radio.pack(anchor="w", padx=(20,0))
         self.filename.pack(anchor="w", padx=(48, 0), pady=(0,10))
@@ -163,16 +166,17 @@ class crawl_subject_GUI(object):
         end=18
         if int(self.start_month.get()) > int(self.end_month.get()):
             self.end_month_var.set(self.start_month_var.get())
-
-            
+       
     def enableEntry(self):
         self.copy_or_csv.set("csv")
         self.filename.configure(state="normal")
+        self.dump_or_keep_button.configure(state='disabled')
         self.filename.update()
         
     def disableEntry(self):
         self.copy_or_csv.set("copy")
         self.filename.configure(state="disabled")
+        self.dump_or_keep_button.configure(state='normal')
         self.filename.update()
     
     def getSavePath(self):
@@ -378,7 +382,6 @@ class crawl_subject_GUI(object):
                     if re.match(r'[0-9]{2}_[0-9]{2}$', sub):
                         splt = sub.split("_")
                         month = int(splt[1])
-                        print(month, self.end_month_var.get(), self.start_month_var.get())
                         if month > int(self.end_month_var.get()) or month < int(self.start_month_var.get()):
                             continue
                     self.crawl_files_recursive(path)
@@ -410,16 +413,22 @@ class crawl_subject_GUI(object):
         tkMessageBox.showinfo("Completed", "Directory successfully copied to csv!") 
                 
     def copy_files(self, lst):
-        for tup in lst:
-            filepath = tup[0]
-            localdir = os.path.dirname(filepath)
-            savepath = self.output_dir+localdir
-            try:
-                with open(savepath) as f: pass
-            except IOError as e:
-                if not os.path.exists(savepath):
-                    os.makedirs(savepath)
+        if self.dump_or_keep.get():
+            for tup in lst:
+                filepath = tup[0]
+                savepath = self.output_dir
                 shutil.copy(filepath, savepath)
+        else:
+            for tup in lst:
+                filepath = tup[0]
+                localdir = os.path.dirname(filepath)
+                savepath = self.output_dir+localdir
+                try:
+                    with open(savepath) as f: pass
+                except IOError as e:
+                    if not os.path.exists(savepath):
+                        os.makedirs(savepath)
+                    shutil.copy(filepath, savepath)
         tkMessageBox.showinfo("Completed", "Directory successfully copied!") 
                 
     def update_tups(self, path, sub):
