@@ -162,7 +162,6 @@ class crawl_subject_GUI(object):
     def update_subjects_chosen(self):
         self.chosen_subjects = [x+1 for x in self.listbox.curselection()]
         self.curr_selection.delete(0, tk.END)
-        print(self.chosen_subjects)
         for i in self.chosen_subjects:
             self.curr_selection.insert(i,i)
 
@@ -377,6 +376,7 @@ class crawl_subject_GUI(object):
     def crawl_files(self, file_or_dirname):
         self.start_button.config(state="disable")
         self.tups=[]
+        print(self.chosen_subjects)
         if self.recurse_or_scan.get():
             if not file_or_dirname.endswith('.csv'):
                 tkMessageBox.showinfo("Error", "You must provide a csv file to scan or uncheck the top box.")
@@ -393,20 +393,26 @@ class crawl_subject_GUI(object):
             reader = csv.reader(f, delimiter=',', )
             next(reader, None)
             for row in reader:
+                # filtering by month
                 m = re.search(r'[0-9]{2}_[0-9]{2}/', row[0])
                 if re.search(r'[0-9]{2}_[0-9]{2}/', row[0]):
                     splt = m.group(0).split("_")
                     month = int(splt[1].strip('/'))
                     if month > int(self.end_month_var.get()) or month < int(self.start_month_var.get()):
                         continue
+                # filtering by subject
+                n = re.search(r'[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{4}', row[0])
+                if re.search(r'[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{4}', row[0]):
+                    splt = n.group(0).split("_")
+                    subject = int(splt[0])
+                    if subject not in self.chosen_subjects:
+                        continue
                 self.update_tups(row[0], row[1])
             # once done 
             if self.copy_or_csv.get()=="copy":
                 self.copy_files(self.tups)
             else:
-                self.copy_to_csv(self.tups)
-        print("DONE")
-                
+                self.copy_to_csv(self.tups)                
     
     def crawl_files_recursive(self, dirname):
         # if the save file name is empty and you want a csv
@@ -424,6 +430,11 @@ class crawl_subject_GUI(object):
                         splt = sub.split("_")
                         month = int(splt[1])
                         if month > int(self.end_month_var.get()) or month < int(self.start_month_var.get()):
+                            continue
+                    if re.search(r'[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{4}', sub):
+                        splt = sub.split("_")
+                        subject = int(splt[0])
+                        if subject not in self.chosen_subjects:
                             continue
                     self.crawl_files_recursive(path)
                 # else, here's a file to check
