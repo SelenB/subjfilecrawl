@@ -473,7 +473,7 @@ class crawl_subject_GUI(object):
             for tup in lst:
                 filepath = tup[0]
                 drive, localdir = os.path.splitdrive(filepath)
-                savepath = os.path.join(self.output_dir, os.path.normpath(os.path.dirname(localdir)).lstrip('\\'))
+                savepath = os.path.join(self.output_dir,os.path.normpath(os.path.dirname(localdir)).lstrip(r"\\").lstrip("/"))
                 try:
                     with open(savepath) as f: pass
                 except IOError as e:
