@@ -7,7 +7,7 @@ try:
     import Tkinter as tk  # for python2
     import tkFileDialog as tkfiledialog
     import tkMessageBox
-    from Tkinter import ttk
+    import ttk
 except ImportError:
     import tkinter as tk  # for python3
     import tkinter.filedialog as tkfiledialog
@@ -126,20 +126,52 @@ class mirror_directory(object):
                 writer.writerow(item)    
         tkMessageBox.showinfo("Completed", "Directory successfully mirrored!")  
             
+#     def mirror_files_recursive(self, lst):
+#         for tup in lst:
+#             filepath = tup[0]
+#             base_name = os.path.basename(filepath)
+#             drive, localdir = os.path.splitdrive(filepath)
+#             savepath = os.path.join(self.output_dir,os.path.dirname(localdir))
+#             try:
+#                 with open(savepath): pass
+#             except IOError:
+#                 if not os.path.exists(savepath):
+#                     os.makedirs(savepath)
+#                 pathBefore = os.getcwd()
+#                 os.chdir(savepath)
+#                 try:
+#                     print("touch", base_name)
+#                     print(savepath)
+#                     subprocess.call(['touch', base_name], shell=True)
+#                 except WindowsError:
+#                     savepath = os.path.
+#                     command = "fsutil file createnew %s 0" % base_name
+#                     subprocess.call([command])
+#                 os.chdir(pathBefore)
+#         tkMessageBox.showinfo("Completed", "Directory successfully mirrored!")       
+        
+        
     def mirror_files_recursive(self, lst):
         for tup in lst:
             filepath = tup[0]
             base_name = os.path.basename(filepath)
-            localdir = os.path.dirname(filepath)
-            savepath = os.path.join(self.output_dir,localdir[1:])
+            drive, localdir = os.path.splitdrive(filepath)
+            savepath = os.path.join(self.output_dir,os.path.normpath(os.path.dirname(localdir)).lstrip('\\'))
+            print(self.output_dir)
+            print(os.path.dirname(localdir))
+            print("SAVEPATH: " ,savepath)
             try:
                 with open(savepath): pass
             except IOError:
                 if not os.path.exists(savepath):
                     os.makedirs(savepath)
+                    print(savepath)
                 pathBefore = os.getcwd()
                 os.chdir(savepath)
-                subprocess.call(['touch', base_name])
+                try:
+                    subprocess.call(['touch', base_name])
+                except WindowsError:
+                    open(base_name,'a').close()
                 os.chdir(pathBefore)
         tkMessageBox.showinfo("Completed", "Directory successfully mirrored!")       
         
