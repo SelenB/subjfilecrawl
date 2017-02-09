@@ -525,7 +525,6 @@ class crawl_subject_GUI(object):
                     self.tups.append((str(path), str(sub)))
             if self.audio_wav_type.get()=='unscrubbed':
                 if re.search(r'\.wav$', sub) and "scrubbed" not in sub:
-                    print(path, sub)
                     self.tups.append((str(path), str(sub)))
         if "custom_regex" in self.checked_boxes:
             if re.search(self.custom_regex_text.get(), sub):
