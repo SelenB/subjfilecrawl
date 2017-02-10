@@ -7,7 +7,7 @@ try:
     import Tkinter as tk  # for python2
     import tkFileDialog as tkfiledialog
     import tkMessageBox
-    from Tkinter import ttk
+    import ttk
 except ImportError:
     import tkinter as tk  # for python3
     import tkinter.filedialog as tkfiledialog
@@ -117,7 +117,7 @@ class mirror_directory(object):
     def mirror_files_to_csv(self, lst):
         self.getSavePath()
         x = self.save_filename
-        if not re.match("(.csv)$", self.save_filename):
+        if not x.endswith('.csv'):
             x+=".csv"
         with open(self.output_dir+'/'+x, 'a') as f:
             writer = csv.writer(f)
@@ -130,8 +130,8 @@ class mirror_directory(object):
         for tup in lst:
             filepath = tup[0]
             base_name = os.path.basename(filepath)
-            localdir = os.path.dirname(filepath)
-            savepath = os.path.join(self.output_dir,localdir[1:])
+            drive, localdir = os.path.splitdrive(filepath)
+            savepath = os.path.join(self.output_dir,os.path.normpath(os.path.dirname(localdir)).lstrip(r"\\").lstrip("/"))
             try:
                 with open(savepath): pass
             except IOError:
@@ -139,7 +139,10 @@ class mirror_directory(object):
                     os.makedirs(savepath)
                 pathBefore = os.getcwd()
                 os.chdir(savepath)
-                subprocess.call(['touch', base_name])
+                try:
+                    subprocess.call(['touch', base_name])
+                except WindowsError:
+                    open(base_name,'a').close()
                 os.chdir(pathBefore)
         tkMessageBox.showinfo("Completed", "Directory successfully mirrored!")       
         

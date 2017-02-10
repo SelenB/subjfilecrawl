@@ -376,7 +376,6 @@ class crawl_subject_GUI(object):
     def crawl_files(self, file_or_dirname):
         self.start_button.config(state="disable")
         self.tups=[]
-        print(self.chosen_subjects)
         if self.recurse_or_scan.get():
             if not file_or_dirname.endswith('.csv'):
                 tkMessageBox.showinfo("Error", "You must provide a csv file to scan or uncheck the top box.")
@@ -473,8 +472,8 @@ class crawl_subject_GUI(object):
         else:
             for tup in lst:
                 filepath = tup[0]
-                localdir = os.path.dirname(filepath)
-                savepath = self.output_dir+localdir
+                drive, localdir = os.path.splitdrive(filepath)
+                savepath = os.path.join(self.output_dir,os.path.normpath(os.path.dirname(localdir)).lstrip(r"\\").lstrip("/"))
                 try:
                     with open(savepath) as f: pass
                 except IOError as e:
