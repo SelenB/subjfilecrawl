@@ -503,7 +503,7 @@ class crawl_subject_GUI(object):
                 self.tups.append((str(path), str(sub)))
         if "audio_clan" in self.checked_boxes:
             if self.audio_clan_type.get()=='newest':
-                if ~os.path.dirname(path).endswith('old_chas'):
+                if os.path.dirname(path).endswith('Audio_Annotation'):
                     if re.search(r'(cex|cha)$', sub):
                         self.tups.append((str(path), str(sub)))
             if self.audio_clan_type.get()=="newclan_merged_final":
