@@ -274,17 +274,19 @@ class crawl_subject_GUI(object):
         label = tk.Label(window, text="Choose which audio clan files you want")
         label.config(font="bold")
         label.pack(anchor="w", padx=(10,10), pady=(10,10))
+        newest_button = tk.Radiobutton(window, text='newest', variable=self.audio_clan_type, value='newest', command=self.audio_clan_type.set('newest'))
         silences_button = tk.Radiobutton(window, text='silences', variable=self.audio_clan_type, value='silences', command=self.audio_clan_type.set('silences'))
         newclan_merged_button = tk.Radiobutton(window, text="newclan_merged", variable=self.audio_clan_type, value="newclan_merged", command=self.audio_clan_type.set("newclan_merged"))
         final_button = tk.Radiobutton(window, text="final", variable=self.audio_clan_type, value="final", command=self.audio_clan_type.set("final"))
         newclan_merged_final_button = tk.Radiobutton(window, text="newclan_merged_final", variable = self.audio_clan_type, value="newclan_merged_final", command=self.audio_clan_type.set("newclan_merged_final"))
+        newest_button.pack(anchor='w')
         newclan_merged_final_button.pack(anchor='w')
         final_button.pack(anchor='w')
         newclan_merged_button.pack(anchor='w')
         silences_button.pack(anchor='w')
         accept = tk.Button(window, text="accept",command=window.destroy)
         accept.pack(side="bottom", pady=(10,0))
-        self.audio_clan_type.set("newclan_merged_final")
+        self.audio_clan_type.set("newest")
         
     def audio_basic_window(self):
         window = tk.Toplevel(root)
@@ -371,6 +373,7 @@ class crawl_subject_GUI(object):
         scrubbed_button.pack(anchor='w')
         unscrubbed_button = tk.Radiobutton(window, text="unscrubbed", variable=self.audio_wav_type, value="unscrubbed", command=self.audio_wav_type.set("unscrubbed"))
         unscrubbed_button.pack(anchor='w')
+        self.audio_wav_type.set("scrubbed")
 
         
     def crawl_files(self, file_or_dirname):
@@ -482,8 +485,7 @@ class crawl_subject_GUI(object):
                     shutil.copy(filepath, savepath)
         tkMessageBox.showinfo("Completed", "Directory successfully copied!") 
                 
-    def update_tups(self, path, sub):
-        
+    def update_tups(self, path, sub):   
         if "audio_basic" in self.checked_boxes:
             if re.search(r'(audio_check)\w{2,3}.csv$', sub):
                 self.tups.append((str(path), str(sub)))
@@ -500,6 +502,10 @@ class crawl_subject_GUI(object):
             if re.search(r'\.mp4$', sub):
                 self.tups.append((str(path), str(sub)))
         if "audio_clan" in self.checked_boxes:
+            if self.audio_clan_type.get()=='newest':
+                if os.path.dirname(path).endswith('Audio_Annotation'):
+                    if re.search(r'(cex|cha)$', sub):
+                        self.tups.append((str(path), str(sub)))
             if self.audio_clan_type.get()=="newclan_merged_final":
                 if re.search(r'newclan_merged_final\.(cex|cha)$', sub):
                     self.tups.append((str(path), str(sub)))
