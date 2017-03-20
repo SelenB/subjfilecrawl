@@ -282,7 +282,7 @@ class crawl_subject_GUI(object):
     def audio_clan_window(self):
         window = tk.Toplevel(root)
         window.title("Audio clan options")
-        window.overrideredirect(1)
+        #window.overrideredirect(1)
         label = tk.Label(window, text="Choose which audio clan files you want")
         label.config(font="bold")
         label.pack(anchor="w", padx=(10,10), pady=(10,10))
@@ -303,7 +303,7 @@ class crawl_subject_GUI(object):
     def audio_basic_window(self):
         window = tk.Toplevel(root)
         window.title("Audio basic options")
-        window.overrideredirect(1)
+        #window.overrideredirect(1)
         accept = tk.Button(window, text="accept", command=window.destroy)
         accept.pack(side="bottom", pady=(10,0))
         label = tk.Label(window, text="check.csv files are the only option for basic audio files")
@@ -314,7 +314,7 @@ class crawl_subject_GUI(object):
     def video_datavyu_window(self):
         window = tk.Toplevel(root)
         window.title("Video datavyu options")
-        window.overrideredirect(1)
+        #window.overrideredirect(1)
         accept = tk.Button(window, text="accept", command=window.destroy)
         accept.pack(side="bottom", pady=(10,0))
         label = tk.Label(window, text="Choose which datavyu files you want")
@@ -330,7 +330,7 @@ class crawl_subject_GUI(object):
     def video_basic_window(self):
         window = tk.Toplevel(root)
         window.title("Video basic options")
-        window.overrideredirect(1)
+        #window.overrideredirect(1)
         accept = tk.Button(window, text="accept", command=window.destroy)
         accept.pack(side="bottom", pady=(10,0))
         label = tk.Label(window, text="check.csv files are the only option for basic video files")
@@ -341,7 +341,7 @@ class crawl_subject_GUI(object):
     def silences_window(self):
         window = tk.Toplevel(root)
         window.title("Silence options")
-        window.overrideredirect(1)
+        #window.overrideredirect(1)
         accept = tk.Button(window, text="accept", command=window.destroy)
         accept.pack(side="bottom", pady=(10,0))
         label = tk.Label(window, text="silences.txt files are the only option for silence files")
@@ -352,7 +352,7 @@ class crawl_subject_GUI(object):
     def lena5min_window(self):
         window=tk.Toplevel(root)
         window.title("lena5min options")
-        window.overrideredirect(1)
+        #window.overrideredirect(1)
         accept = tk.Button(window, text="accept", command=window.destroy)
         accept.pack(side="bottom", pady=(10,0))
         label = tk.Label(window, text="lena5min.csv files are the only option for lena5min")
@@ -363,7 +363,7 @@ class crawl_subject_GUI(object):
     def video_mp4_window(self):
         window=tk.Toplevel(root)
         window.title("video_mp4 options")
-        window.overrideredirect(1)
+        #window.overrideredirect(1)
         accept = tk.Button(window, text="accept", command=window.destroy)
         accept.pack(side="bottom", pady=(10,0))
         label = tk.Label(window, text=".mp4 files are the only option for video_mp4 files")
@@ -374,7 +374,7 @@ class crawl_subject_GUI(object):
     def audio_wav_window(self):
         window = tk.Toplevel(root)
         window.title("Audio wav options")
-        window.overrideredirect(1)
+        #window.overrideredirect(1)
         accept = tk.Button(window, text="accept", command=window.destroy)
         accept.pack(side="bottom", pady=(10,0))
         label = tk.Label(window, text="Choose which audio wav files you want")
@@ -390,6 +390,10 @@ class crawl_subject_GUI(object):
         
     def crawl_files(self, file_or_dirname):
         #self.start_button.config(state="disable")
+        if len(self.checked_boxes)==0:
+            tkMessageBox.showinfo("Error", "You must select some file types!")
+            self.file_type_chooser()
+            return
         self.tups=[]
         if self.recurse_or_scan.get():
             if not file_or_dirname.endswith('.csv'):
@@ -468,6 +472,9 @@ class crawl_subject_GUI(object):
             
     
     def copy_to_csv(self, lst):
+        if len(lst)==0:
+            tkMessageBox.showinfo("Error", "No files of the selected type exist in your chosen directory!")
+            return
         x = self.save_filename
         if not re.match("(.csv)$", self.save_filename):
             x+=".csv"
@@ -479,6 +486,9 @@ class crawl_subject_GUI(object):
         tkMessageBox.showinfo("Completed", "Directory successfully copied to csv!") 
                 
     def copy_files(self, lst):
+        if len(lst)==0:
+            tkMessageBox.showinfo("Error", "No files of the selected type exist in your chosen directory!")
+            return
         if self.dump_or_keep.get():
             for tup in lst:
                 filepath = tup[0]
