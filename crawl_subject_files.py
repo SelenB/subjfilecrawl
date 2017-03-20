@@ -19,6 +19,7 @@ debug = False
 class crawl_subject_GUI(object):
     def __init__(self, master):
         self.start = 0
+        self.checked_boxes=[]
         # list of tups that holds the path -> file structure
         self.tups = []
         self.init_gui(master)
@@ -72,61 +73,71 @@ class crawl_subject_GUI(object):
         self.save_as_CSV_radio.pack(anchor="w", padx=(20,0))
         self.filename.pack(anchor="w", padx=(48, 0), pady=(0,10))
         self.copy_files_radio.invoke()
+        # subject ranges
+        self.choose_files_button = tk.Button(master, text="Choose file types", command = lambda:self.file_type_chooser())
+        self.choose_files_button.pack(anchor='center')
+        # start process
+        self.start_button = tk.Button(master, text="start", command = lambda: self.crawl_files(self.crawl_dir))
+        #self.start_button.config(state="disable")
+        self.start_button.pack(side=tk.BOTTOM, pady=(10,0))
+        
+    def file_type_chooser(self):
+        window = tk.Toplevel(root)
+        window.title("File type chooser")
+        #window.overrideredirect(1)
+        close = tk.Button(window, text="close", command=window.destroy)
+        close.pack(side=tk.BOTTOM, pady=(10,0))
         # options for audio annotations
-        self.file_options_label = tk.Label(master, text="What kinds of files do you want?")
+        self.file_options_label = tk.Label(window, text="What kinds of files do you want?")
         self.file_options_label.pack(anchor='w')
         self.audio_clan = tk.BooleanVar()
-        self.clan_file_option = tk.Checkbutton(master, variable = self.audio_clan, text="Audio clan files")
+        self.clan_file_option = tk.Checkbutton(window, variable = self.audio_clan, text="Audio clan files")
         self.clan_file_option.pack(anchor='w')
         self.audio_basic = tk.BooleanVar()
-        self.audio_basic_option = tk.Checkbutton(master, variable = self.audio_basic, text="Basic audio files")
+        self.audio_basic_option = tk.Checkbutton(window, variable = self.audio_basic, text="Basic audio files")
         self.audio_basic_option.pack(anchor='w')
         self.video_datavyu = tk.BooleanVar()
-        self.datavyu_file_option = tk.Checkbutton(master, variable = self.video_datavyu,text="Video datavyu files")
+        self.datavyu_file_option = tk.Checkbutton(window, variable = self.video_datavyu,text="Video datavyu files")
         self.datavyu_file_option.pack(anchor='w')
         self.video_basic = tk.BooleanVar()
-        self.video_basic_option = tk.Checkbutton(master, variable = self.video_basic, text="Basic video files")
+        self.video_basic_option = tk.Checkbutton(window, variable = self.video_basic, text="Basic video files")
         self.video_basic_option.pack(anchor='w')
         self.silences=tk.BooleanVar()
-        self.silences_option = tk.Checkbutton(master, variable=self.silences, text="Silence.txt files")
+        self.silences_option = tk.Checkbutton(window, variable=self.silences, text="Silence.txt files")
         self.silences_option.pack(anchor='w')
         self.lena5min = tk.BooleanVar()
-        self.lena5min_option = tk.Checkbutton(master, variable=self.lena5min, text="lena5min files")
+        self.lena5min_option = tk.Checkbutton(window, variable=self.lena5min, text="lena5min files")
         self.lena5min_option.pack(anchor='w')
         self.video_mp4 = tk.BooleanVar()
-        self.video_mp4_option = tk.Checkbutton(master, variable=self.video_mp4, text="Video mp4 files")
+        self.video_mp4_option = tk.Checkbutton(window, variable=self.video_mp4, text="Video mp4 files")
         self.video_mp4_option.pack(anchor='w')
         self.audio_wav = tk.BooleanVar()
-        self.audio_wav_option = tk.Checkbutton(master, variable=self.audio_wav, text="Audio wav files")
+        self.audio_wav_option = tk.Checkbutton(window, variable=self.audio_wav, text="Audio wav files")
         self.audio_wav_option.pack(anchor='w')
         self.custom_regex = tk.BooleanVar()
-        self.custom_regex_option = tk.Checkbutton(master, variable=self.custom_regex, text="Write your own regex")
+        self.custom_regex_option = tk.Checkbutton(window, variable=self.custom_regex, text="Write your own regex")
         self.custom_regex_option.pack(anchor='w')
-        self.custom_regex_text = tk.Entry(master)
+        self.custom_regex_text = tk.Entry(window)
         self.custom_regex_text.pack(anchor="w", padx=(20, 0), pady=(0,10))
         # month ranges
-        startMonthLabel = tk.Label(master, text="Start Month:")
+        startMonthLabel = tk.Label(window, text="Start Month:")
         startMonthLabel.pack(anchor="w")
         self.start_month_var = tk.StringVar()
-        self.start_month = tk.Spinbox(master, from_=6, to=18, textvariable=self.start_month_var, command=self.updateSpinbox)
+        self.start_month = tk.Spinbox(window, from_=6, to=18, textvariable=self.start_month_var, command=self.updateSpinbox)
         self.start_month_var.set(6)
         self.start_month.pack(anchor='w')
-        endMonthLabel = tk.Label(master, text="End Month:")
+        endMonthLabel = tk.Label(window, text="End Month:")
         endMonthLabel.pack(anchor="w")
         self.end_month_var = tk.StringVar()
-        self.end_month = tk.Spinbox(master, from_=6, to=18, textvariable=self.end_month_var, command=self.updateSpinbox)
+        self.end_month = tk.Spinbox(window, from_=6, to=18, textvariable=self.end_month_var, command=self.updateSpinbox)
         self.end_month_var.set(18)
         self.end_month.pack(anchor="w")
         # subject ranges
         self.chosen_subjects = range(1,47)
-        self.choose_subjects = tk.Button(master, text="Choose subjects (default is all)", command = lambda:self.choose_subjects_window())
+        self.choose_subjects = tk.Button(window, text="Choose subjects (default is all)", command = lambda:self.choose_subjects_window())
         self.choose_subjects.pack(anchor='w')
-        # start process
-        self.start_button = tk.Button(master, text="start", command = lambda: self.crawl_files(self.crawl_dir))
-        self.start_button.config(state="disable")
-        self.start_button.pack(side=tk.BOTTOM, pady=(10,0))
         # next button
-        self.next_button = tk.Button(master, text="next", command = self.getCheckboxVals)
+        self.next_button = tk.Button(window, text="submit", command = self.getCheckboxVals)
         self.next_button.pack(side=tk.BOTTOM, pady=(10,0))
         
     def choose_subjects_window(self):
@@ -196,7 +207,7 @@ class crawl_subject_GUI(object):
         else:
             for item in self.checked_boxes:
                 self.create_new_window(item)
-            self.start_button.config(state="normal")
+            #self.start_button.config(state="normal")
             self.getSavePath()
             self.custom_regex_text.update()
             #self.close_button.invoke()
@@ -238,6 +249,7 @@ class crawl_subject_GUI(object):
                 self.crawl_dir = tkfiledialog.askdirectory(**self.crawl_dir_opt)
             # update the GUI to reflect the change
             self.current_crawl_dir["text"] = self.crawl_dir
+        
         
     def create_new_window(self, option):
         self.audio_clan_type = tk.StringVar() 
@@ -377,7 +389,7 @@ class crawl_subject_GUI(object):
 
         
     def crawl_files(self, file_or_dirname):
-        self.start_button.config(state="disable")
+        #self.start_button.config(state="disable")
         self.tups=[]
         if self.recurse_or_scan.get():
             if not file_or_dirname.endswith('.csv'):
