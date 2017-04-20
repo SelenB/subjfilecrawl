@@ -286,19 +286,17 @@ class crawl_subject_GUI(object):
         label = tk.Label(window, text="Choose which audio clan files you want")
         label.config(font="bold")
         label.pack(anchor="w", padx=(10,10), pady=(10,10))
-        newest_button = tk.Radiobutton(window, text='newest', variable=self.audio_clan_type, value='newest', command=self.audio_clan_type.set('newest'))
         silences_button = tk.Radiobutton(window, text='silences', variable=self.audio_clan_type, value='silences', command=self.audio_clan_type.set('silences'))
         newclan_merged_button = tk.Radiobutton(window, text="newclan_merged", variable=self.audio_clan_type, value="newclan_merged", command=self.audio_clan_type.set("newclan_merged"))
         final_button = tk.Radiobutton(window, text="final", variable=self.audio_clan_type, value="final", command=self.audio_clan_type.set("final"))
         newclan_merged_final_button = tk.Radiobutton(window, text="newclan_merged_final", variable = self.audio_clan_type, value="newclan_merged_final", command=self.audio_clan_type.set("newclan_merged_final"))
-        newest_button.pack(anchor='w')
-        newclan_merged_final_button.pack(anchor='w')
         final_button.pack(anchor='w')
+        newclan_merged_final_button.pack(anchor='w')
         newclan_merged_button.pack(anchor='w')
         silences_button.pack(anchor='w')
         accept = tk.Button(window, text="accept",command=window.destroy)
         accept.pack(side="bottom", pady=(10,0))
-        self.audio_clan_type.set("newest")
+        self.audio_clan_type.set("final")
         
     def audio_basic_window(self):
         window = tk.Toplevel(root)
@@ -306,7 +304,7 @@ class crawl_subject_GUI(object):
         #window.overrideredirect(1)
         accept = tk.Button(window, text="accept", command=window.destroy)
         accept.pack(side="bottom", pady=(10,0))
-        label = tk.Label(window, text="check.csv files are the only option for basic audio files")
+        label = tk.Label(window, text="sparse_code.csv files are the only option for basic audio files")
         label.config(font="bold")
         label.pack(anchor="w", padx=(10,10), pady=(10,10))
         self.audio_basic_type = True
@@ -333,7 +331,7 @@ class crawl_subject_GUI(object):
         #window.overrideredirect(1)
         accept = tk.Button(window, text="accept", command=window.destroy)
         accept.pack(side="bottom", pady=(10,0))
-        label = tk.Label(window, text="check.csv files are the only option for basic video files")
+        label = tk.Label(window, text="sparse_code.csv files are the only option for basic video files")
         label.config(font="bold")
         label.pack(anchor="w", padx=(10,10), pady=(10,10))
         self.video_basic_type = True
@@ -475,7 +473,7 @@ class crawl_subject_GUI(object):
         if len(lst)==0:
             tkMessageBox.showinfo("Error", "No files of the selected type exist in your chosen directory!")
             return
-        x = self.save_filename
+        x = self.save_filename.strip()
         if not re.match("(.csv)$", self.save_filename):
             x+=".csv"
         with open(self.output_dir+'/'+x, 'a') as f:
@@ -509,11 +507,13 @@ class crawl_subject_GUI(object):
                 
     def update_tups(self, path, sub):   
         if "audio_basic" in self.checked_boxes:
-            if re.search(r'(audio_check)\w{2,3}.csv$', sub):
-                self.tups.append((str(path), str(sub)))
+            if os.path.dirname(path).endswith('Audio_Analysis'):
+                if re.search(r'sparse_code.csv$', sub):
+                    self.tups.append((str(path), str(sub)))
         if "video_basic" in self.checked_boxes:
-            if re.search(r'(video_check)\w+.csv$', sub):
-                self.tups.append((str(path), str(sub)))
+            if os.path.dirname(path).endswith('Video_Analysis'):
+                if re.search(r'sparse_code.csv$', sub):
+                    self.tups.append((str(path), str(sub)))
         if "silences" in self.checked_boxes:
             if re.search(r'silences\.txt$', sub):
                 self.tups.append((str(path), str(sub)))
@@ -524,7 +524,7 @@ class crawl_subject_GUI(object):
             if re.search(r'\.mp4$', sub):
                 self.tups.append((str(path), str(sub)))
         if "audio_clan" in self.checked_boxes:
-            if self.audio_clan_type.get()=='newest':
+            if self.audio_clan_type.get()=='final':
                 if os.path.dirname(path).endswith('Audio_Annotation'):
                     if re.search(r'(cex|cha)$', sub):
                         self.tups.append((str(path), str(sub)))
@@ -533,9 +533,6 @@ class crawl_subject_GUI(object):
                     self.tups.append((str(path), str(sub)))
             if self.audio_clan_type.get()=='newclan_merged':
                 if re.search(r'newclan_merged\.(cex|cha)$', sub):
-                    self.tups.append((str(path), str(sub)))
-            if self.audio_clan_type.get()=='final':
-                if re.search(r'final\.(cex|cha)$', sub):
                     self.tups.append((str(path), str(sub)))
             if self.audio_clan_type.get()=='silences':
                 if re.search(r'silences.*(cex|cha)$', sub):

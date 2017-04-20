@@ -128,6 +128,7 @@ class mirror_directory(object):
             
     def mirror_files_recursive(self, lst):
         for tup in lst:
+            count+=1
             filepath = tup[0]
             base_name = os.path.basename(filepath)
             drive, localdir = os.path.splitdrive(filepath)
