@@ -27,7 +27,7 @@ class mirror_directory(object):
         self.start=0
         self.lst = []
         self.init_gui_mirror(master)
-        
+
     def init_gui_mirror(self, master):
         self.master = master
         master.title("Mirror directory")
@@ -39,7 +39,7 @@ class mirror_directory(object):
         mirrorDirLabel = tk.Label(master, text="Mirror this directory:")
         mirrorDirLabel.pack(anchor="w")
         self.current_mirror_dir = tk.Label(master, bg="white", text = self.mirror_dir)
-        self.current_mirror_dir.pack(anchor="w", padx=5)  
+        self.current_mirror_dir.pack(anchor="w", padx=5)
         #browser to choose mirror directory
         self.choose_mirror_directory_button = tk.Button(master, text="Browse", command=lambda: self.choose_directory("mirror"))
         self.choose_mirror_directory_button.pack(anchor="center", pady=(0,10))
@@ -70,13 +70,13 @@ class mirror_directory(object):
         # start process
         self.start_button = tk.Button(master, text="start", command = lambda: self.mirror(self.mirror_dir))
         self.start_button.pack(side=tk.BOTTOM, pady=(10,0))
-        
-        
+
+
     def enableEntry(self):
         self.copy_or_csv.set("csv")
         self.filename.configure(state="normal")
         self.filename.update()
-        
+
     def disableEntry(self):
         self.copy_or_csv.set("copy")
         self.filename.configure(state="disabled")
@@ -85,7 +85,7 @@ class mirror_directory(object):
     def getSavePath(self):
         x = self.filename.get()
         self.save_filename = x
-        
+
     def mirror(self, dirname):
         if os.listdir(dirname)==[]:
             self.lst.append((dirname, ""))
@@ -104,7 +104,7 @@ class mirror_directory(object):
         if dirname==self.mirror_dir:
             self.mirror_files(self.lst)
             self.lst = []
-            
+
     def mirror_files(self, lst):
         if not self.filename.get()and self.copy_or_csv.get()=='csv':
             tkMessageBox.showinfo("Error", "You must provide a name for your file!")
@@ -113,7 +113,7 @@ class mirror_directory(object):
             self.mirror_files_to_csv(self.lst)
         else:
             self.mirror_files_recursive(self.lst)
-        
+
     def mirror_files_to_csv(self, lst):
         self.getSavePath()
         x = self.save_filename
@@ -123,12 +123,11 @@ class mirror_directory(object):
             writer = csv.writer(f)
             writer.writerow(["full path", "file name"])
             for item in lst:
-                writer.writerow(item)    
-        tkMessageBox.showinfo("Completed", "Directory successfully mirrored!")  
-            
+                writer.writerow(item)
+        tkMessageBox.showinfo("Completed", "Directory successfully mirrored!")
+
     def mirror_files_recursive(self, lst):
         for tup in lst:
-            count+=1
             filepath = tup[0]
             base_name = os.path.basename(filepath)
             drive, localdir = os.path.splitdrive(filepath)
@@ -145,8 +144,8 @@ class mirror_directory(object):
                 except WindowsError:
                     open(base_name,'a').close()
                 os.chdir(pathBefore)
-        tkMessageBox.showinfo("Completed", "Directory successfully mirrored!")       
-        
+        tkMessageBox.showinfo("Completed", "Directory successfully mirrored!")
+
     def choose_directory(self, dir_type):
         if dir_type=="output":
             # save the output directory
@@ -158,8 +157,8 @@ class mirror_directory(object):
             self.mirror_dir = tkfiledialog.askdirectory(**self.mirror_dir_opt)
             # update the GUI to reflect the change
             self.current_mirror_dir["text"] = self.mirror_dir
-        
-        
+
+
 if __name__=="__main__":
     root = tk.Tk()
     my_gui = mirror_directory(root)
