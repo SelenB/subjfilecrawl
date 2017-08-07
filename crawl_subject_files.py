@@ -10,7 +10,7 @@ import csv
 import os
 import re
 import shutil
-from pip._vendor.distlib.util import CSVWriter
+# from pip._vendor.distlib.util import CSVWriter
 import mirror_script.mirror_directory as mirror
 
 
@@ -23,8 +23,8 @@ class crawl_subject_GUI(object):
         # list of tups that holds the path -> file structure
         self.tups = []
         self.init_gui(master)
-    
-    def init_gui(self, master):  
+
+    def init_gui(self, master):
         self.master = master
         master.title("Get subject files")
         # open up mirror directory popup
@@ -42,7 +42,7 @@ class crawl_subject_GUI(object):
         crawlDirLabel = tk.Label(master, text="Crawl directory:")
         crawlDirLabel.pack(anchor="w")
         self.current_crawl_dir = tk.Label(master, bg="white", text = self.crawl_dir)
-        self.current_crawl_dir.pack(anchor="w", padx=5)  
+        self.current_crawl_dir.pack(anchor="w", padx=5)
         #browser to choose crawl directory
         self.choose_crawl_directory_button = tk.Button(master, text="Browse", command=lambda: self.choose_directory("crawl"))
         self.choose_crawl_directory_button.pack(anchor="center", pady=(0,10))
@@ -80,7 +80,7 @@ class crawl_subject_GUI(object):
         self.start_button = tk.Button(master, text="start", command = lambda: self.crawl_files(self.crawl_dir))
         #self.start_button.config(state="disable")
         self.start_button.pack(side=tk.BOTTOM, pady=(10,0))
-        
+
     def file_type_chooser(self):
         window = tk.Toplevel(root)
         window.title("File type chooser")
@@ -139,7 +139,7 @@ class crawl_subject_GUI(object):
         # next button
         self.next_button = tk.Button(window, text="submit", command = self.getCheckboxVals)
         self.next_button.pack(side=tk.BOTTOM, pady=(10,0))
-        
+
     def choose_subjects_window(self):
         window = tk.Toplevel(root)
         window.title("Choose subjects")
@@ -169,7 +169,7 @@ class crawl_subject_GUI(object):
         right_scrollbar.config(command=self.curr_selection.yview)
         for i in self.chosen_subjects:
             self.curr_selection.insert(i,i)
-        
+
     def update_subjects_chosen(self):
         self.chosen_subjects = [x+1 for x in self.listbox.curselection()]
         self.curr_selection.delete(0, tk.END)
@@ -179,7 +179,7 @@ class crawl_subject_GUI(object):
     def popup_mirror(self):
         window = tk.Toplevel(root)
         inst = mirror.mirror_directory(window)
-        
+
     def getCheckboxVals(self):
         self.start = 1
         self.checked_boxes = []
@@ -211,28 +211,28 @@ class crawl_subject_GUI(object):
             self.getSavePath()
             self.custom_regex_text.update()
             #self.close_button.invoke()
-            
+
     def updateSpinbox(self):
         start=6
         end=18
         if int(self.start_month.get()) > int(self.end_month.get()):
             self.end_month_var.set(self.start_month_var.get())
-       
+
     def enableEntry(self):
         self.copy_or_csv.set("csv")
         self.filename.configure(state="normal")
         self.dump_or_keep_button.configure(state='disabled')
         self.filename.update()
-        
+
     def disableEntry(self):
         self.copy_or_csv.set("copy")
         self.filename.configure(state="disabled")
         self.dump_or_keep_button.configure(state='normal')
         self.filename.update()
-    
+
     def getSavePath(self):
         self.save_filename = self.filename.get()
-        
+
     def choose_directory(self, dir_type):
         if dir_type=="output":
             # save the output directory
@@ -249,10 +249,10 @@ class crawl_subject_GUI(object):
                 self.crawl_dir = tkfiledialog.askdirectory(**self.crawl_dir_opt)
             # update the GUI to reflect the change
             self.current_crawl_dir["text"] = self.crawl_dir
-        
-        
+
+
     def create_new_window(self, option):
-        self.audio_clan_type = tk.StringVar() 
+        self.audio_clan_type = tk.StringVar()
         self.audio_clan_type.set("None")
         self.audio_basic_type = False
         self.video_datavyu_type = tk.StringVar()
@@ -278,7 +278,7 @@ class crawl_subject_GUI(object):
             self.video_mp4_window()
         if option == "audio_wav":
             self.audio_wav_window()
-    
+
     def audio_clan_window(self):
         window = tk.Toplevel(root)
         window.title("Audio clan options")
@@ -297,7 +297,7 @@ class crawl_subject_GUI(object):
         accept = tk.Button(window, text="accept",command=window.destroy)
         accept.pack(side="bottom", pady=(10,0))
         self.audio_clan_type.set("final")
-        
+
     def audio_basic_window(self):
         window = tk.Toplevel(root)
         window.title("Audio basic options")
@@ -308,7 +308,7 @@ class crawl_subject_GUI(object):
         label.config(font="bold")
         label.pack(anchor="w", padx=(10,10), pady=(10,10))
         self.audio_basic_type = True
-        
+
     def video_datavyu_window(self):
         window = tk.Toplevel(root)
         window.title("Video datavyu options")
@@ -324,7 +324,7 @@ class crawl_subject_GUI(object):
         consensus_button = tk.Radiobutton(window, text="consensus", variable=self.video_datavyu_type, value="consensus", command=self.video_datavyu_type.set("consensus"))
         consensus_button.pack(anchor='w')
         self.video_datavyu_type.set("final")
-        
+
     def video_basic_window(self):
         window = tk.Toplevel(root)
         window.title("Video basic options")
@@ -335,7 +335,7 @@ class crawl_subject_GUI(object):
         label.config(font="bold")
         label.pack(anchor="w", padx=(10,10), pady=(10,10))
         self.video_basic_type = True
-        
+
     def silences_window(self):
         window = tk.Toplevel(root)
         window.title("Silence options")
@@ -346,7 +346,7 @@ class crawl_subject_GUI(object):
         label.config(font="bold")
         label.pack(anchor='w', padx=(10,10), pady=(10,10))
         self.silences_type = True
-        
+
     def lena5min_window(self):
         window=tk.Toplevel(root)
         window.title("lena5min options")
@@ -357,7 +357,7 @@ class crawl_subject_GUI(object):
         label.config(font="bold")
         label.pack(anchor='w', padx=(10,10), pady=(10,10))
         self.lena5min_type=True
-    
+
     def video_mp4_window(self):
         window=tk.Toplevel(root)
         window.title("video_mp4 options")
@@ -368,7 +368,7 @@ class crawl_subject_GUI(object):
         label.config(font="bold")
         label.pack(anchor='w', padx=(10,10), pady=(10,10))
         self.lena5min_type=True
-        
+
     def audio_wav_window(self):
         window = tk.Toplevel(root)
         window.title("Audio wav options")
@@ -385,7 +385,7 @@ class crawl_subject_GUI(object):
         unscrubbed_button.pack(anchor='w')
         self.audio_wav_type.set("scrubbed")
 
-        
+
     def crawl_files(self, file_or_dirname):
         #self.start_button.config(state="disable")
         if len(self.checked_boxes)==0:
@@ -403,7 +403,7 @@ class crawl_subject_GUI(object):
                 tkMessageBox.showinfo("Error", "You must provide a directory to crawl.")
                 return
             self.crawl_files_recursive(file_or_dirname)
-        
+
     def crawl_files_from_csv(self, filename):
         with open(filename, 'r') as f:
             reader = csv.reader(f, delimiter=',', )
@@ -424,12 +424,12 @@ class crawl_subject_GUI(object):
                     if subject not in self.chosen_subjects:
                         continue
                 self.update_tups(row[0], row[1])
-            # once done 
+            # once done
             if self.copy_or_csv.get()=="copy":
                 self.copy_files(self.tups)
             else:
-                self.copy_to_csv(self.tups)                
-    
+                self.copy_to_csv(self.tups)
+
     def crawl_files_recursive(self, dirname):
         # if the save file name is empty and you want a csv
         if not self.filename.get() and self.copy_or_csv.get()=="csv":
@@ -467,8 +467,8 @@ class crawl_subject_GUI(object):
                 self.copy_files(self.tups)
             else:
                 self.copy_to_csv(self.tups)
-            
-    
+
+
     def copy_to_csv(self, lst):
         if len(lst)==0:
             tkMessageBox.showinfo("Error", "No files of the selected type exist in your chosen directory!")
@@ -481,8 +481,8 @@ class crawl_subject_GUI(object):
             writer.writerow(["full path", "file name"])
             for item in lst:
                 writer.writerow(item)
-        tkMessageBox.showinfo("Completed", "Directory successfully copied to csv!") 
-                
+        tkMessageBox.showinfo("Completed", "Directory successfully copied to csv!")
+
     def copy_files(self, lst):
         if len(lst)==0:
             tkMessageBox.showinfo("Error", "No files of the selected type exist in your chosen directory!")
@@ -503,9 +503,9 @@ class crawl_subject_GUI(object):
                     if not os.path.exists(savepath):
                         os.makedirs(savepath)
                     shutil.copy(filepath, savepath)
-        tkMessageBox.showinfo("Completed", "Directory successfully copied!") 
-                
-    def update_tups(self, path, sub):   
+        tkMessageBox.showinfo("Completed", "Directory successfully copied!")
+
+    def update_tups(self, path, sub):
         if "audio_basic" in self.checked_boxes:
             if os.path.dirname(path).endswith('Audio_Analysis'):
                 if re.search(r'sparse_code.csv$', sub):
@@ -554,9 +554,9 @@ class crawl_subject_GUI(object):
         if "custom_regex" in self.checked_boxes:
             if re.search(self.custom_regex_text.get(), sub):
                 self.tups.append((str(path), str(sub)))
-        
-        
-            
+
+
+
 if __name__=="__main__":
     root = tk.Tk()
     my_gui = crawl_subject_GUI(root)
