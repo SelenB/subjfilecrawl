@@ -90,14 +90,10 @@ class mirror_directory(object):
         if os.listdir(dirname)==[]:
             self.lst.append((dirname, ""))
         try:
-            for sub in os.listdir(dirname):
-                path = os.path.join(dirname, sub)
-                # if the current item is a directory, recurse
-                if os.path.isdir(path):
-                    self.mirror(path)
-                # else, here's a file to check
-                else:
-                    self.lst.append((path, sub))
+           for roots, dirs, files in os.walk(dirname):
+                for name in files:
+                    path = os.path.join(roots, name)
+                    self.lst.append(path, name)
         # this only happens if we don't have permissions to files
         except OSError as e:
             print(e)
