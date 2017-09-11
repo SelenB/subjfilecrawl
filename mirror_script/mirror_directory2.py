@@ -37,7 +37,7 @@ class mirror_directory(object):
         self.close_button = tk.Button(master, text="close", command = lambda: master.destroy())
         self.close_button.pack(side=tk.BOTTOM)
         # label for mirror directory
-        self.mirror_dir = os.getcwd()
+        self.mirror_dir = os.getcwd() 
         mirrorDirLabel = tk.Label(master, text="Mirror this directory:")
         mirrorDirLabel.pack(anchor="w")
         self.current_mirror_dir = tk.Label(master, bg="white", text = self.mirror_dir)
