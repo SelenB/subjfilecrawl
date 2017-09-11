@@ -148,7 +148,7 @@ class mirror_directory(object):
                 os.chdir(pathBefore)
         tkMessageBox.showinfo("Completed", "Directory successfully mirrored!")
 
-    def choose_directory(self, dir_type):
+    def choose_directory(self, dir_type): 
         if dir_type=="output":
             # save the output directory
             self.output_dir =  tkfiledialog.askdirectory(**self.output_dir_opt)
