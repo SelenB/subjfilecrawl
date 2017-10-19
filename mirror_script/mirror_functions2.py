@@ -73,28 +73,28 @@ def get_output_dir():
     with open('output_dir.txt', 'rt') as fileR1:
         output_dir = fileR1.read();
     fileR1.close()
-    #os.remove('output_dir.txt')
+    os.remove('output_dir.txt')
     return output_dir
 
 def get_mirror_dir():
     with open('mirror_dir.txt', 'rt') as fileR2:
         mirror_dir = fileR2.read();
     fileR2.close()
-    #os.remove('mirror_dir.txt')
+    os.remove('mirror_dir.txt')
     return mirror_dir
 
 def get_copy_or_csv():
     with open('copy_or_csv.txt', 'rt') as fileR3:
         copy_or_csv = fileR3.read();
     fileR3.close()
-    #os.remove('copy_or_csv.txt')
+    os.remove('copy_or_csv.txt')
     return copy_or_csv
 
 def get_filename():
     with open('filename.txt', 'rt') as fileR4:
         filename = fileR4.read();
     fileR4.close()
-    #os.remove('filename.txt')
+    os.remove('filename.txt')
     return filename
 
 
